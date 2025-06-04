@@ -1,0 +1,5 @@
+{
+  "name": "Personal Budget Allocation App",
+  "description": "A mobile-first budget allocation application that allows users to input income, create custom budget categories (with subcategories), allocate amounts, and track remaining balances.",
+  "requestFramePermissions": []
+}
