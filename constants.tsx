@@ -212,10 +212,86 @@ export const ArrowTrendingDownIcon: React.FC<{ className?: string }> = ({ classN
   </svg>
 );
 
+// Additional icons for splash screen
+export const ChevronRightIcon: React.FC<{ className?: string }> = ({ className = "w-5 h-5" }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
+  </svg>
+);
+
+export const ChevronLeftIcon: React.FC<{ className?: string }> = ({ className = "w-5 h-5" }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
+  </svg>
+);
+
+export const SparklesIcon: React.FC<{ className?: string }> = ({ className = "w-5 h-5" }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09ZM18.259 8.715 18 9.75l-.259-1.035a3.375 3.375 0 0 0-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 0 0 2.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 0 0 2.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 0 0-2.456 2.456ZM16.894 20.567 16.5 21.75l-.394-1.183a2.25 2.25 0 0 0-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 0 0 1.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 0 0 1.423 1.423l1.183.394-1.183.394a2.25 2.25 0 0 0-1.423 1.423Z" />
+  </svg>
+);
+
+export const ShieldCheckIcon: React.FC<{ className?: string }> = ({ className = "w-5 h-5" }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z" />
+  </svg>
+);
+
 export const CURRENCIES = [
-  { code: 'USD', name: 'US Dollar' },
+  { code: 'ZAR', name: 'South African Rand (R)' },
+  { code: 'USD', name: 'US Dollar ($)' },
   { code: 'EUR', name: 'Euro (€)' },
   { code: 'GBP', name: 'British Pound (£)' },
-  { code: 'ZAR', name: 'South African Rand (R)' },
   { code: 'JPY', name: 'Japanese Yen (¥)' },
+  { code: 'CAD', name: 'Canadian Dollar (C$)' },
+  { code: 'AUD', name: 'Australian Dollar (A$)' },
+  { code: 'CHF', name: 'Swiss Franc (CHF)' },
+  { code: 'CNY', name: 'Chinese Yuan (¥)' },
+  { code: 'INR', name: 'Indian Rupee (₹)' },
+  { code: 'KRW', name: 'South Korean Won (₩)' },
+  { code: 'SGD', name: 'Singapore Dollar (S$)' },
+  { code: 'HKD', name: 'Hong Kong Dollar (HK$)' },
+  { code: 'NOK', name: 'Norwegian Krone (kr)' },
+  { code: 'SEK', name: 'Swedish Krona (kr)' },
+  { code: 'DKK', name: 'Danish Krone (kr)' },
+  { code: 'PLN', name: 'Polish Złoty (zł)' },
+  { code: 'CZK', name: 'Czech Koruna (Kč)' },
+  { code: 'HUF', name: 'Hungarian Forint (Ft)' },
+  { code: 'RUB', name: 'Russian Ruble (₽)' },
+  { code: 'BRL', name: 'Brazilian Real (R$)' },
+  { code: 'MXN', name: 'Mexican Peso ($)' },
+  { code: 'ARS', name: 'Argentine Peso ($)' },
+  { code: 'CLP', name: 'Chilean Peso ($)' },
+  { code: 'COP', name: 'Colombian Peso ($)' },
+  { code: 'PEN', name: 'Peruvian Sol (S/)' },
+  { code: 'TRY', name: 'Turkish Lira (₺)' },
+  { code: 'ILS', name: 'Israeli Shekel (₪)' },
+  { code: 'AED', name: 'UAE Dirham (د.إ)' },
+  { code: 'SAR', name: 'Saudi Riyal (﷼)' },
+  { code: 'EGP', name: 'Egyptian Pound (£)' },
+  { code: 'NGN', name: 'Nigerian Naira (₦)' },
+  { code: 'KES', name: 'Kenyan Shilling (KSh)' },
+  { code: 'GHS', name: 'Ghanaian Cedi (₵)' },
+  { code: 'MAD', name: 'Moroccan Dirham (د.م.)' },
+  { code: 'TND', name: 'Tunisian Dinar (د.ت)' },
+  { code: 'BWP', name: 'Botswana Pula (P)' },
+  { code: 'NAD', name: 'Namibian Dollar (N$)' },
+  { code: 'SZL', name: 'Swazi Lilangeni (L)' },
+  { code: 'LSL', name: 'Lesotho Loti (L)' },
+  { code: 'MWK', name: 'Malawian Kwacha (MK)' },
+  { code: 'ZMW', name: 'Zambian Kwacha (ZK)' },
+  { code: 'UGX', name: 'Ugandan Shilling (USh)' },
+  { code: 'TZS', name: 'Tanzanian Shilling (TSh)' },
+  { code: 'RWF', name: 'Rwandan Franc (RF)' },
+  { code: 'ETB', name: 'Ethiopian Birr (Br)' },
+  { code: 'DZD', name: 'Algerian Dinar (د.ج)' },
+  { code: 'LYD', name: 'Libyan Dinar (ل.د)' },
+  { code: 'THB', name: 'Thai Baht (฿)' },
+  { code: 'VND', name: 'Vietnamese Dong (₫)' },
+  { code: 'IDR', name: 'Indonesian Rupiah (Rp)' },
+  { code: 'MYR', name: 'Malaysian Ringgit (RM)' },
+  { code: 'PHP', name: 'Philippine Peso (₱)' },
+  { code: 'TWD', name: 'Taiwan Dollar (NT$)' },
+  { code: 'NZD', name: 'New Zealand Dollar (NZ$)' },
+  { code: 'FJD', name: 'Fijian Dollar (FJ$)' },
 ];

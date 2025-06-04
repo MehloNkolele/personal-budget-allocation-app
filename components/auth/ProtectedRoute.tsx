@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import AuthPage from './AuthPage';
 import LoadingSpinner from '../LoadingSpinner';
+import SplashScreen from '../SplashScreen';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -9,6 +10,20 @@ interface ProtectedRouteProps {
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   const { user, loading } = useAuth();
+  const [showSplash, setShowSplash] = useState(false);
+
+  useEffect(() => {
+    // Check if user has seen the splash screen
+    const hasSeenSplash = localStorage.getItem('hasSeenSplash');
+    if (!hasSeenSplash && !user) {
+      setShowSplash(true);
+    }
+  }, [user]);
+
+  const handleSplashComplete = () => {
+    localStorage.setItem('hasSeenSplash', 'true');
+    setShowSplash(false);
+  };
 
   if (loading) {
     return (
@@ -16,6 +31,10 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
         <LoadingSpinner size="lg" message="Authenticating..." />
       </div>
     );
+  }
+
+  if (showSplash && !user) {
+    return <SplashScreen onComplete={handleSplashComplete} />;
   }
 
   if (!user) {
