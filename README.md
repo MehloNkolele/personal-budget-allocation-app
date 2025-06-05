@@ -1,5 +1,7 @@
 # Personal Budget Allocation App
 
+🚀 **APK Build Test** - Testing GitHub Actions APK generation
+
 A secure, mobile-first budget allocation application with Firebase authentication that allows users to input income, create custom budget categories (with subcategories), allocate amounts, and track remaining balances.
 
 ## Features
