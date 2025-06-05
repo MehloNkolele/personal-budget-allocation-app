@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Category, Subcategory, Transaction, ModalType, CategoryFormPropsNew, CategoryFormPropsEdit, SubcategoryFormPropsNew, SubcategoryFormPropsEdit, MonthlyBudget } from './types';
 import Dashboard from './components/Dashboard';
@@ -32,10 +31,35 @@ const AppContent: React.FC = () => {
   const [modalState, setModalState] = useState<ModalType>(null);
   const [selectedCurrency, setSelectedCurrency] = useState<string>(CURRENCIES[0].code);
   const [areGlobalAmountsHidden, setAreGlobalAmountsHidden] = useState<boolean>(false);
+  const [isIncomeHidden, setIsIncomeHidden] = useState<boolean>(true);
   const [monthlyBudgets, setMonthlyBudgets] = useState<MonthlyBudget[]>([]);
   const [currentSection, setCurrentSection] = useState<'dashboard' | 'categories' | 'reports' | 'planning' | 'history'>('dashboard');
   const [isTransactionFormOpen, setIsTransactionFormOpen] = useState<boolean>(false);
   const [isDataLoaded, setIsDataLoaded] = useState<boolean>(false);
+
+  // Add event listener for beforeunload to hide income when app is closed
+  useEffect(() => {
+    const handleAppClose = () => {
+      // Hide income when app is about to close
+      setIsIncomeHidden(true);
+      // Need to save immediately since the app is closing
+      if (user?.uid) {
+        const userData = UserDataManager.loadUserData(user.uid);
+        UserDataManager.saveUserData(user.uid, {
+          ...userData,
+          isIncomeHidden: true
+        });
+      }
+    };
+
+    // Add event listener for page unload (app closing)
+    window.addEventListener('beforeunload', handleAppClose);
+    
+    // Cleanup the event listener
+    return () => {
+      window.removeEventListener('beforeunload', handleAppClose);
+    };
+  }, [user?.uid]);
 
   // Load user-specific data when user changes
   useEffect(() => {
@@ -53,6 +77,7 @@ const AppContent: React.FC = () => {
         setTransactions(userData.transactions);
         setSelectedCurrency(userData.selectedCurrency);
         setAreGlobalAmountsHidden(userData.areGlobalAmountsHidden);
+        setIsIncomeHidden(userData.isIncomeHidden);
         setMonthlyBudgets(userData.monthlyBudgets);
         setIsDataLoaded(true);
 
@@ -71,6 +96,7 @@ const AppContent: React.FC = () => {
       setTransactions([]);
       setSelectedCurrency(CURRENCIES[0].code);
       setAreGlobalAmountsHidden(false);
+      setIsIncomeHidden(true);
       setMonthlyBudgets([]);
       setIsDataLoaded(false);
     }
@@ -109,6 +135,12 @@ const AppContent: React.FC = () => {
 
   useEffect(() => {
     if (user?.uid && isDataLoaded) {
+      UserDataManager.saveIsIncomeHidden(user.uid, isIncomeHidden);
+    }
+  }, [user?.uid, isIncomeHidden, isDataLoaded]);
+
+  useEffect(() => {
+    if (user?.uid && isDataLoaded) {
       UserDataManager.saveMonthlyBudgets(user.uid, monthlyBudgets);
     }
   }, [user?.uid, monthlyBudgets, isDataLoaded]);
@@ -120,7 +152,16 @@ const AppContent: React.FC = () => {
     }
   }, [categories, transactions, totalIncome, generateBudgetNotifications]);
 
-  const handleTotalIncomeChange = useCallback((income: number) => { setTotalIncome(income); }, []);
+  const handleTotalIncomeChange = useCallback((income: number) => { 
+    setTotalIncome(income); 
+    // Auto-hide income after it's changed
+    setIsIncomeHidden(true);
+  }, []);
+  
+  const toggleIncomeHidden = useCallback(() => {
+    setIsIncomeHidden(prev => !prev);
+  }, []);
+
   const handleCurrencyChange = useCallback((currencyCode: string) => { setSelectedCurrency(currencyCode); }, []);
   const toggleGlobalAmountsHidden = useCallback(() => { setAreGlobalAmountsHidden(prev => !prev); }, []);
 
@@ -305,6 +346,11 @@ const AppContent: React.FC = () => {
     }
   }, [selectedCurrency, areGlobalAmountsHidden]);
 
+  const formatCurrencyWithVisibility = useCallback((amount: number, isIndividualItemHidden?: boolean): string => {
+    if (isIncomeHidden || isIndividualItemHidden) return '••••';
+    return formatCurrency(amount, isIndividualItemHidden);
+  }, [formatCurrency, isIncomeHidden]);
+
   const getParentCategoryNameForModal = () => {
     if(modalState?.type === 'addSubcategory' || modalState?.type === 'editSubcategory'){
       return categories.find(c => c.id === modalState.parentCategoryId)?.name;
@@ -390,9 +436,11 @@ const AppContent: React.FC = () => {
             onCurrencyChange={handleCurrencyChange}
             areGlobalAmountsHidden={areGlobalAmountsHidden}
             onToggleGlobalAmountsHidden={toggleGlobalAmountsHidden}
-            formatCurrency={formatCurrency}
+            formatCurrency={formatCurrencyWithVisibility}
             categories={categories}
             onAddCategory={openAddCategoryModal}
+            isIncomeHidden={isIncomeHidden}
+            onToggleIncomeHidden={toggleIncomeHidden}
           />
         );
       case 'categories':

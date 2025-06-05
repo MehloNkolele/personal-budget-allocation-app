@@ -8,12 +8,14 @@ When a user logs out, they should be taken to the splash screens unless they are
 ### Current Logic
 1. **Logout Process** (`AuthContext.tsx`):
    - Calls Firebase `signOut()`
+   - Sets `justLoggedOut` flag in localStorage
    - Removes `hasSeenSplash` from localStorage
-   - This ensures splash screen will show again for non-authenticated users
+   - This ensures splash screen will show again after logout
 
 2. **Splash Screen Display Logic** (`ProtectedRoute.tsx`):
-   - **For authenticated users**: Shows splash if user preferences `showSplashScreen` is true AND global `hasSeenSplash` is not set
-   - **For non-authenticated users**: Shows splash if global `hasSeenSplash` is not set
+   - **For authenticated users**: Shows splash if user preferences `showSplashScreen` is true
+   - **For non-authenticated users**: Shows splash if they just logged out OR they've never seen splash before (first-time visitors)
+   - **Page refresh**: Does NOT trigger splash screen (only logout or first-time visit does)
 
 3. **User Preferences**:
    - Users can disable splash screen in their settings
@@ -42,6 +44,14 @@ When a user logs out, they should be taken to the splash screens unless they are
 1. User visits app → sees splash screen
 2. User completes splash screen → `hasSeenSplash` set to true
 3. User signs up/logs in → may see splash screen based on their preferences
+
+### Scenario 4: Page refresh (FIXED)
+1. User logs in → sees splash screen (first time)
+2. User completes splash screen → splash screen hidden
+3. User uses app normally
+4. User refreshes page → does NOT see splash screen (stays in app)
+5. User logs out → sees splash screen again
+6. User refreshes page while logged out → does NOT see splash screen (already seen)
 
 ## Manual Testing Steps
 

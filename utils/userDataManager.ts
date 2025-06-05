@@ -21,6 +21,7 @@ export class UserDataManager {
         transactions: [],
         selectedCurrency: CURRENCIES[0].code,
         areGlobalAmountsHidden: false,
+        isIncomeHidden: true, // Default to hidden for security
         monthlyBudgets: [],
       };
 
@@ -77,6 +78,18 @@ export class UserDataManager {
           localStorage.removeItem(this.getUserKey(userId, 'areGlobalAmountsHidden'));
         }
       }
+      
+      // Load income hidden setting
+      const savedIncomeHidden = localStorage.getItem(this.getUserKey(userId, 'isIncomeHidden'));
+      let isIncomeHidden = defaultData.isIncomeHidden; // Default to true (hidden) for security
+      if (savedIncomeHidden) {
+        const parsedIncomeHidden = JSON.parse(savedIncomeHidden);
+        if (typeof parsedIncomeHidden === 'boolean') {
+          isIncomeHidden = parsedIncomeHidden;
+        } else {
+          localStorage.removeItem(this.getUserKey(userId, 'isIncomeHidden'));
+        }
+      }
 
       // Load monthly budgets
       const savedMonthlyBudgets = localStorage.getItem(this.getUserKey(userId, 'monthlyBudgets'));
@@ -96,6 +109,7 @@ export class UserDataManager {
         transactions,
         selectedCurrency,
         areGlobalAmountsHidden,
+        isIncomeHidden,
         monthlyBudgets,
       };
     } catch (error) {
@@ -108,6 +122,7 @@ export class UserDataManager {
         transactions: [],
         selectedCurrency: CURRENCIES[0].code,
         areGlobalAmountsHidden: false,
+        isIncomeHidden: true, // Default to hidden for security
         monthlyBudgets: [],
       };
     }
@@ -133,6 +148,10 @@ export class UserDataManager {
   static saveGlobalAmountsHidden(userId: string, areGlobalAmountsHidden: boolean): void {
     localStorage.setItem(this.getUserKey(userId, 'areGlobalAmountsHidden'), JSON.stringify(areGlobalAmountsHidden));
   }
+  
+  static saveIsIncomeHidden(userId: string, isIncomeHidden: boolean): void {
+    localStorage.setItem(this.getUserKey(userId, 'isIncomeHidden'), JSON.stringify(isIncomeHidden));
+  }
 
   static saveMonthlyBudgets(userId: string, monthlyBudgets: MonthlyBudget[]): void {
     localStorage.setItem(this.getUserKey(userId, 'monthlyBudgets'), JSON.stringify(monthlyBudgets));
@@ -149,6 +168,7 @@ export class UserDataManager {
     this.saveTransactions(userId, data.transactions);
     this.saveSelectedCurrency(userId, data.selectedCurrency);
     this.saveGlobalAmountsHidden(userId, data.areGlobalAmountsHidden);
+    this.saveIsIncomeHidden(userId, data.isIncomeHidden);
     this.saveMonthlyBudgets(userId, data.monthlyBudgets);
   }
 
@@ -160,6 +180,7 @@ export class UserDataManager {
       'transactions',
       'selectedCurrency',
       'areGlobalAmountsHidden',
+      'isIncomeHidden',
       'monthlyBudgets',
       'budgetTemplates',
       'preferences'

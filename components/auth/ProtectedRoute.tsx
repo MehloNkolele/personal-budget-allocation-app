@@ -11,24 +11,35 @@ interface ProtectedRouteProps {
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   const { user, loading } = useAuth();
-  const [showSplash, setShowSplash] = useState(true);
+  const [showSplash, setShowSplash] = useState(false);
   const [splashCheckComplete, setSplashCheckComplete] = useState(false);
 
   useEffect(() => {
     // Check splash screen preference
     const checkSplashPreference = () => {
-      // Check for global splash screen flag (for non-authenticated users)
+      // Check for global splash screen flag and logout flag
       const globalHasSeenSplash = localStorage.getItem('hasSeenSplash');
+      const justLoggedOut = localStorage.getItem('justLoggedOut');
 
       if (user?.uid) {
-        // For authenticated users, only check their preferences (ignore global flag)
-        const userPreferences = UserDataManager.loadUserPreferences(user.uid);
-        if (!userPreferences.showSplashScreen) {
+        // For authenticated users, only show splash screen if they just logged out
+        // or if they have explicitly enabled it in their preferences
+        if (justLoggedOut) {
+          const userPreferences = UserDataManager.loadUserPreferences(user.uid);
+          // Even if they just logged out, respect their preference to not see splash
+          setShowSplash(userPreferences.showSplashScreen);
+          localStorage.removeItem('justLoggedOut');
+        } else {
+          // Normal page load/refresh - don't show splash screen
           setShowSplash(false);
         }
       } else {
-        // For non-authenticated users, only check global flag
-        if (globalHasSeenSplash) {
+        // For non-authenticated users, show splash only if:
+        // 1. They just logged out, OR
+        // 2. They've never seen the splash before (first-time visitors)
+        if (justLoggedOut || !globalHasSeenSplash) {
+          setShowSplash(true);
+        } else {
           setShowSplash(false);
         }
       }
@@ -43,26 +54,32 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   const handleSplashComplete = () => {
     // Set global flag for non-authenticated users
     localStorage.setItem('hasSeenSplash', 'true');
-    
+
+    // Clear the logout flag since splash has been completed
+    localStorage.removeItem('justLoggedOut');
+
     // For authenticated users, also update their preferences
     if (user?.uid) {
       const preferences = UserDataManager.loadUserPreferences(user.uid);
       // Don't automatically disable splash for authenticated users - let them choose
       UserDataManager.saveUserPreferences(user.uid, preferences);
     }
-    
+
     setShowSplash(false);
   };
 
   const handleSplashDisable = () => {
     // Set global flag
     localStorage.setItem('hasSeenSplash', 'true');
-    
+
+    // Clear the logout flag since splash has been disabled
+    localStorage.removeItem('justLoggedOut');
+
     // For authenticated users, update their preferences to disable splash
     if (user?.uid) {
       UserDataManager.updateSplashScreenPreference(user.uid, false);
     }
-    
+
     setShowSplash(false);
   };
 

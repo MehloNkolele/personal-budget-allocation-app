@@ -115,9 +115,9 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({ notificatio
           {/* Notifications List */}
           <div className="max-h-80 overflow-y-auto">
             {notificationList.length === 0 ? (
-              <div className="px-4 py-8 text-center">
-                <BellIcon className="w-8 h-8 text-slate-500 mx-auto mb-2" />
-                <p className="text-slate-400 text-sm">No notifications</p>
+              <div className="px-4 py-8 flex flex-col items-center justify-center text-center">
+                <BellIcon className="w-8 h-8 text-slate-500 mb-3" />
+                <p className="text-slate-400 text-sm font-medium">No notifications</p>
                 <p className="text-slate-500 text-xs mt-1">You're all caught up!</p>
               </div>
             ) : (

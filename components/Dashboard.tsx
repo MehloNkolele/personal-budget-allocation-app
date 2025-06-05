@@ -1,5 +1,4 @@
-
-import React from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import ProgressBar from './ProgressBar';
 import { InfoIcon, CheckCircleIcon, EyeIcon, EyeSlashIcon } from '../constants';
 import { CURRENCIES } from '../constants'; // Import CURRENCIES
@@ -16,6 +15,8 @@ interface DashboardProps {
   formatCurrency: (amount: number) => string; // Now expects a function that already knows about currency and visibility
   categories?: any[]; // Add categories prop
   onAddCategory?: () => void; // Add callback for adding categories
+  isIncomeHidden: boolean; // Added prop for income visibility
+  onToggleIncomeHidden: () => void; // Added prop for toggling income visibility
 }
 
 const Dashboard: React.FC<DashboardProps> = ({
@@ -30,20 +31,38 @@ const Dashboard: React.FC<DashboardProps> = ({
   formatCurrency,
   categories = [],
   onAddCategory,
+  isIncomeHidden,
+  onToggleIncomeHidden
 }) => {
   const allocationExceedsIncome = totalAllocated > totalIncome && totalIncome > 0;
   const allocationMatchesIncome = totalAllocated === totalIncome && totalIncome > 0;
+  const [isIncomeInputFocused, setIsIncomeInputFocused] = useState<boolean>(false);
+  const incomeInputRef = useRef<HTMLInputElement>(null);
 
   const handleIncomeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = parseFloat(e.target.value);
     onTotalIncomeChange(isNaN(value) || value < 0 ? 0 : value);
   };
 
+  // Auto-hide income when input is blurred (user has finished editing)
+  const handleIncomeBlur = () => {
+    setIsIncomeInputFocused(false);
+    onToggleIncomeHidden(); // Hide income when user finishes editing
+  };
+
+  // Show income when input is focused for editing
+  const handleIncomeFocus = () => {
+    setIsIncomeInputFocused(true);
+    if (isIncomeHidden) {
+      onToggleIncomeHidden(); // Show income when editing
+    }
+  };
+
   // Calculate dashboard statistics
   const totalCategories = categories.length;
   const totalSubcategories = categories.reduce((sum, cat) => sum + cat.subcategories.length, 0);
   const completedSubcategories = categories.reduce((sum, cat) =>
-    sum + cat.subcategories.filter(sub => sub.isComplete).length, 0
+    sum + cat.subcategories.filter((sub: any) => sub.isComplete).length, 0
   );
   const allocationPercentage = totalIncome > 0 ? (totalAllocated / totalIncome) * 100 : 0;
 
@@ -73,18 +92,33 @@ const Dashboard: React.FC<DashboardProps> = ({
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-          <div>
+          <div className="relative">
             <label htmlFor="totalIncome" className="block text-sm font-medium text-slate-300 mb-1">
               Total Monthly Income
             </label>
-            <input
-              type="number"
-              id="totalIncome"
-              value={totalIncome === 0 ? '' : totalIncome.toString()}
-              onChange={handleIncomeChange}
-              className="w-full bg-slate-700 border border-slate-600 text-slate-100 rounded-md p-3 text-lg focus:ring-sky-500 focus:border-sky-500 transition"
-              placeholder="Enter your total income"
-            />
+            <div className="relative">
+              <input
+                ref={incomeInputRef}
+                type={!isIncomeHidden || isIncomeInputFocused ? "number" : "password"}
+                id="totalIncome"
+                value={totalIncome === 0 ? '' : totalIncome.toString()}
+                onChange={handleIncomeChange}
+                onFocus={handleIncomeFocus}
+                onBlur={handleIncomeBlur}
+                className="w-full bg-slate-700 border border-slate-600 text-slate-100 rounded-md p-3 text-lg focus:ring-sky-500 focus:border-sky-500 transition"
+                placeholder="Enter your total income"
+              />
+              <button 
+                onClick={onToggleIncomeHidden}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-sky-400 transition-colors"
+                aria-label={isIncomeHidden ? "Show income" : "Hide income"}
+              >
+                {isIncomeHidden ? 
+                  <EyeIcon className="w-5 h-5" /> : 
+                  <EyeSlashIcon className="w-5 h-5" />
+                }
+              </button>
+            </div>
           </div>
           <div>
             <label htmlFor="currencySelector" className="block text-sm font-medium text-slate-300 mb-1">
@@ -106,7 +140,9 @@ const Dashboard: React.FC<DashboardProps> = ({
         <div className="space-y-4">
           <div className="flex justify-between items-center">
             <span className="text-slate-300">Total Income:</span>
-            <span className="font-semibold text-lg text-emerald-400">{formatCurrency(totalIncome)}</span>
+            <span className="font-semibold text-lg text-emerald-400">
+              {!isIncomeHidden ? formatCurrency(totalIncome) : "•••••"}
+            </span>
           </div>
           <div className="flex justify-between items-center">
             <span className="text-slate-300">Total Allocated:</span>

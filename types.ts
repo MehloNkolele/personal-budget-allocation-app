@@ -1,4 +1,3 @@
-
 export interface Transaction {
   id: string;
   amount: number;
@@ -33,6 +32,7 @@ export interface BudgetData {
   transactions: Transaction[];
   selectedCurrency: string; // New: to store selected currency
   areGlobalAmountsHidden: boolean; // New: to store global visibility state
+  isIncomeHidden: boolean; // New: to store income visibility state
   monthlyBudgets: MonthlyBudget[]; // New: to store monthly budget history
 }
 
