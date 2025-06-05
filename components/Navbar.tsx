@@ -219,19 +219,10 @@ const Navbar: React.FC<NavbarProps> = ({
                 )}
               </div>
 
-              {/* Enhanced Divider */}
-              <div className="hidden md:block w-px h-6 bg-gradient-to-b from-transparent via-slate-600 to-transparent"></div>
-
-              {/* Notifications */}
-              <NotificationDropdown notifications={notifications} />
-
-              {/* User Dropdown - More Space */}
-              <UserDropdown user={user} />
-
-              {/* Enhanced Mobile Menu Button */}
+              {/* Enhanced Mobile Menu Button - Now positioned before notifications */}
               <button
                 onClick={() => setIsMobileMenuOpen(true)}
-                className="md:hidden relative p-2.5 text-slate-400 hover:text-white hover:bg-slate-700/60 rounded-xl transition-all duration-300 hover:scale-105 group"
+                className="lg:hidden relative p-2.5 text-slate-400 hover:text-white hover:bg-slate-700/60 rounded-xl transition-all duration-300 hover:scale-105 group"
                 aria-label="Open menu"
               >
                 <Bars3Icon className="w-5 h-5 transition-transform duration-200 group-hover:scale-110" />
@@ -239,6 +230,15 @@ const Navbar: React.FC<NavbarProps> = ({
                 {/* Subtle background glow on hover */}
                 <div className="absolute inset-0 bg-slate-700/20 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 -z-10"></div>
               </button>
+
+              {/* Enhanced Divider */}
+              <div className="hidden lg:block w-px h-6 bg-gradient-to-b from-transparent via-slate-600 to-transparent"></div>
+
+              {/* Notifications */}
+              <NotificationDropdown notifications={notifications} />
+
+              {/* User Dropdown - Now positioned at the far right */}
+              <UserDropdown user={user} />
             </div>
           </div>
         </div>
