@@ -22,3 +22,11 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Gradle temp files
+gradle-temp/
+gradle-8.5-all.zip
+
+# Android keystore (keep secure)
+android/budget-tracker-key.keystore
+android/key.properties

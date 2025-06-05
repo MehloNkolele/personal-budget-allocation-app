@@ -1,0 +1,95 @@
+name: Build Production APK
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:  # Allows manual trigger
+
+jobs:
+  build-apk:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        
+    - name: Setup Java
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: '17'
+        
+    - name: Setup Android SDK
+      uses: android-actions/setup-android@v3
+      
+    - name: Install dependencies
+      run: npm ci
+      
+    - name: Build web app
+      run: npm run build
+      
+    - name: Sync Capacitor
+      run: npx cap sync android
+      
+    - name: Create keystore
+      run: |
+        cd android
+        echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > budget-tracker-key.keystore
+        echo "storePassword=${{ secrets.KEYSTORE_PASSWORD }}" > key.properties
+        echo "keyPassword=${{ secrets.KEY_PASSWORD }}" >> key.properties
+        echo "keyAlias=${{ secrets.KEY_ALIAS }}" >> key.properties
+        echo "storeFile=budget-tracker-key.keystore" >> key.properties
+      
+    - name: Build Release APK
+      run: |
+        cd android
+        chmod +x gradlew
+        ./gradlew assembleRelease
+        
+    - name: Upload APK artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: BudgetTrackerPro-v1.0.0-production
+        path: android/app/build/outputs/apk/release/app-release.apk
+        retention-days: 30
+        
+    - name: Create Release
+      if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: v1.0.0-${{ github.run_number }}
+        name: Budget Tracker Pro v1.0.0 Build ${{ github.run_number }}
+        body: |
+          🚀 **Production APK Build**
+          
+          **App Details:**
+          - Version: 1.0.0
+          - Build: ${{ github.run_number }}
+          - Commit: ${{ github.sha }}
+          
+          **Installation:**
+          1. Download the APK file below
+          2. Enable "Install from unknown sources" on your Android device
+          3. Install the APK
+          
+          **Features:**
+          - Personal budget tracking
+          - Category management  
+          - Transaction history
+          - Reports and analytics
+          - Offline functionality
+          
+        files: |
+          android/app/build/outputs/apk/release/app-release.apk
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
