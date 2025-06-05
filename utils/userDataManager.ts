@@ -1,6 +1,12 @@
 import { Category, Transaction, BudgetData, MonthlyBudget, BudgetTemplate } from '../types';
 import { CURRENCIES } from '../constants';
 
+// User preferences interface
+export interface UserPreferences {
+  showSplashScreen: boolean;
+  // Add more preferences here in the future
+}
+
 export class UserDataManager {
   private static getUserKey(userId: string, dataType: string): string {
     return `budgetApp_${userId}_${dataType}`;
@@ -155,7 +161,8 @@ export class UserDataManager {
       'selectedCurrency',
       'areGlobalAmountsHidden',
       'monthlyBudgets',
-      'budgetTemplates'
+      'budgetTemplates',
+      'preferences'
     ];
 
     keysToRemove.forEach(dataType => {
@@ -294,5 +301,38 @@ export class UserDataManager {
   static getMonthName(year: number, month: number): string {
     const date = new Date(year, month - 1, 1);
     return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+  }
+
+  // User preferences management
+  static loadUserPreferences(userId: string): UserPreferences {
+    try {
+      const savedPreferences = localStorage.getItem(this.getUserKey(userId, 'preferences'));
+      if (savedPreferences) {
+        const parsedPreferences = JSON.parse(savedPreferences);
+        // Ensure all required properties exist with defaults
+        return {
+          showSplashScreen: parsedPreferences.showSplashScreen ?? true,
+          ...parsedPreferences
+        };
+      }
+      return {
+        showSplashScreen: true
+      };
+    } catch (error) {
+      console.error("Error loading user preferences:", error);
+      return {
+        showSplashScreen: true
+      };
+    }
+  }
+
+  static saveUserPreferences(userId: string, preferences: UserPreferences): void {
+    localStorage.setItem(this.getUserKey(userId, 'preferences'), JSON.stringify(preferences));
+  }
+
+  static updateSplashScreenPreference(userId: string, showSplashScreen: boolean): void {
+    const preferences = this.loadUserPreferences(userId);
+    preferences.showSplashScreen = showSplashScreen;
+    this.saveUserPreferences(userId, preferences);
   }
 }

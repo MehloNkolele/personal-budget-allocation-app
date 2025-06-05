@@ -97,6 +97,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const signOut = async (): Promise<void> => {
     try {
       await firebaseSignOut(auth);
+
+      // Reset splash screen flags so they show again after logout
+      // Remove the global flag that prevents splash screen for non-authenticated users
+      localStorage.removeItem('hasSeenSplash');
+
+      // After logout, the user becomes non-authenticated, so they should see the splash screen
+      // again regardless of their previous authenticated user preferences
+      // The splash screen will show for non-authenticated users unless they complete it
+
       // Note: We don't clear user data here to preserve it for when they sign back in
       // Data is only cleared when explicitly requested by the user
     } catch (error: any) {

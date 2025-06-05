@@ -1,11 +1,11 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../hooks/useToast';
 import SettingsModal from './SettingsModal';
-import ConfirmationModal from './ConfirmationModal';
 import DangerousActionModal from './DangerousActionModal';
 import { UserIcon, PhotoIcon, LockClosedIcon, EyeIcon, EyeSlashIcon, TrashIcon } from '../constants';
 import { PasswordChangeData } from '../types';
+import { UserDataManager } from '../utils/userDataManager';
 
 interface UserSettingsProps {
   isOpen: boolean;
@@ -36,6 +36,17 @@ const UserSettings: React.FC<UserSettingsProps> = ({ isOpen, onClose }) => {
   // Data management state
   const [showClearDataConfirmation, setShowClearDataConfirmation] = useState(false);
   const [isClearingData, setIsClearingData] = useState(false);
+
+  // Preferences state
+  const [showSplashScreen, setShowSplashScreen] = useState(true);
+
+  // Load user preferences on mount
+  useEffect(() => {
+    if (user?.uid) {
+      const preferences = UserDataManager.loadUserPreferences(user.uid);
+      setShowSplashScreen(preferences.showSplashScreen);
+    }
+  }, [user?.uid]);
 
   const handleProfilePictureChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -155,6 +166,18 @@ const UserSettings: React.FC<UserSettingsProps> = ({ isOpen, onClose }) => {
       addToast(error.message || 'Failed to clear data', 'error');
     } finally {
       setIsClearingData(false);
+    }
+  };
+
+  const handleSplashScreenToggle = async (enabled: boolean) => {
+    if (user?.uid) {
+      try {
+        UserDataManager.updateSplashScreenPreference(user.uid, enabled);
+        setShowSplashScreen(enabled);
+        addToast(`Splash screen ${enabled ? 'enabled' : 'disabled'} successfully!`, 'success');
+      } catch (error: any) {
+        addToast('Failed to update splash screen preference', 'error');
+      }
     }
   };
 
@@ -407,6 +430,59 @@ const UserSettings: React.FC<UserSettingsProps> = ({ isOpen, onClose }) => {
               )}
             </button>
           </form>
+        </div>
+      </div>
+
+      {/* Preferences Section - Full Width */}
+      <div className="mt-8 bg-gradient-to-br from-indigo-900/30 to-purple-800/30 border border-indigo-500/50 rounded-2xl p-6 backdrop-blur-sm">
+        <div className="flex items-center space-x-3 mb-6">
+          <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center">
+            <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+          </div>
+          <div>
+            <h3 className="text-xl font-bold text-white">App Preferences</h3>
+            <p className="text-indigo-200 text-sm">Customize your app experience</p>
+          </div>
+        </div>
+
+        <div className="bg-indigo-900/40 border border-indigo-500/30 rounded-xl p-6">
+          <div className="space-y-6">
+            {/* Splash Screen Setting */}
+            <div className="flex items-center justify-between p-4 bg-slate-800/50 rounded-xl border border-slate-600/30">
+              <div className="flex items-start space-x-4">
+                <div className="flex-shrink-0">
+                  <div className="w-12 h-12 bg-indigo-500/20 rounded-xl flex items-center justify-center">
+                    <svg className="w-6 h-6 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                </div>
+                <div className="flex-grow">
+                  <h4 className="text-indigo-300 font-bold text-lg mb-2">Welcome Introduction</h4>
+                  <p className="text-slate-300 text-sm leading-relaxed">
+                    Show the interactive welcome tour when you sign in. This introduction helps you learn about all the app features and can be disabled here.
+                  </p>
+                </div>
+              </div>
+              <div className="flex-shrink-0 ml-4">
+                <button
+                  onClick={() => handleSplashScreenToggle(!showSplashScreen)}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-800 ${
+                    showSplashScreen ? 'bg-indigo-600' : 'bg-slate-600'
+                  }`}
+                >
+                  <span
+                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform duration-300 ${
+                      showSplashScreen ? 'translate-x-6' : 'translate-x-1'
+                    }`}
+                  />
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 

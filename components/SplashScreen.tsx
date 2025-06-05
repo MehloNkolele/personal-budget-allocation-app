@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   ChevronRightIcon,
   ChevronLeftIcon,
@@ -15,6 +15,8 @@ import InteractiveDemo from './InteractiveDemo';
 
 interface SplashScreenProps {
   onComplete: () => void;
+  onDisable?: () => void;
+  isAuthenticated?: boolean;
 }
 
 interface SlideData {
@@ -29,7 +31,7 @@ interface SlideData {
   points: number;
 }
 
-const SplashScreen: React.FC<SplashScreenProps> = ({ onComplete }) => {
+const SplashScreen: React.FC<SplashScreenProps> = ({ onComplete, onDisable, isAuthenticated = false }) => {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [totalPoints, setTotalPoints] = useState(0);
   const [completedSlides, setCompletedSlides] = useState<Set<number>>(new Set());
@@ -111,7 +113,9 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ onComplete }) => {
       id: 6,
       title: "Ready to Start Your Journey? 🚀",
       subtitle: "Your Financial Freedom Awaits",
-      description: "You've earned all the achievement badges! Sign up now and start building the financial future you deserve.",
+      description: isAuthenticated 
+        ? "You've earned all the achievement badges! Start managing your budget like a pro. You can disable this introduction in your settings later."
+        : "You've earned all the achievement badges! Sign up now and start building the financial future you deserve.",
       icon: DocumentTextIcon,
       color: "text-yellow-400",
       bgGradient: "from-yellow-500/20 to-orange-500/20",
@@ -249,18 +253,8 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ onComplete }) => {
         </div>
       </div>
 
-      {/* Swipe Indicator */}
-      {currentSlide === 0 && (
-        <div className="absolute bottom-32 left-1/2 transform -translate-x-1/2 z-10 animate-bounce">
-          <div className="flex items-center gap-2 text-slate-400 text-sm">
-            <span>Swipe to navigate</span>
-            <ChevronRightIcon className="w-4 h-4" />
-          </div>
-        </div>
-      )}
-
       {/* Main Content */}
-      <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-4 sm:px-6 pb-20">
+      <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-4 sm:px-6 pb-24">
         <div className="max-w-2xl w-full text-center">
           {/* Icon */}
           <div className="mb-8">
@@ -297,43 +291,102 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ onComplete }) => {
         </div>
       </div>
 
-      {/* Navigation */}
-      <div className="relative z-10 flex justify-between items-center p-4 sm:p-6">
-        <button
-          onClick={prevSlide}
-          disabled={currentSlide === 0}
-          className={`flex items-center gap-2 px-6 py-3 rounded-full font-medium transition-all ${
-            currentSlide === 0
-              ? 'text-slate-500 cursor-not-allowed'
-              : 'text-white bg-slate-700 hover:bg-slate-600'
-          }`}
-        >
-          <ChevronLeftIcon className="w-4 h-4" />
-          Previous
-        </button>
+      {/* Fixed Footer Navigation */}
+      <div className="fixed bottom-0 left-0 right-0 z-20 bg-slate-900/95 backdrop-blur-sm border-t border-slate-700">
+        <div className="px-4 py-3 sm:px-6 sm:py-4">
+          {currentSlide === slides.length - 1 && onDisable ? (
+            // Last slide with disable option
+            <div className="space-y-3">
+              <div className="flex justify-between items-center">
+                <button
+                  onClick={prevSlide}
+                  className="flex items-center gap-1 sm:gap-2 px-3 py-2 sm:px-4 sm:py-2 text-white bg-slate-700 hover:bg-slate-600 rounded-full font-medium transition-all text-sm"
+                >
+                  <ChevronLeftIcon className="w-4 h-4" />
+                  <span className="hidden sm:inline">Previous</span>
+                </button>
 
-        <div className="flex gap-2">
-          {slides.map((_, index) => (
-            <div
-              key={index}
-              className={`w-2 h-2 rounded-full transition-all ${
-                index === currentSlide
-                  ? 'bg-sky-400 w-8'
-                  : index < currentSlide
-                  ? 'bg-green-400'
-                  : 'bg-slate-600'
-              }`}
-            />
-          ))}
+                <div className="flex gap-2">
+                  {slides.map((_, index) => (
+                    <div
+                      key={index}
+                      className={`w-2 h-2 rounded-full transition-all ${
+                        index === currentSlide
+                          ? 'bg-sky-400 w-6'
+                          : index < currentSlide
+                          ? 'bg-green-400'
+                          : 'bg-slate-600'
+                      }`}
+                    />
+                  ))}
+                </div>
+
+                <div className="w-16 sm:w-20"></div> {/* Spacer */}
+              </div>
+
+              <div className="flex gap-2 justify-center">
+                <button
+                  onClick={onComplete}
+                  className="flex items-center gap-1 sm:gap-2 px-4 py-2 sm:px-6 sm:py-3 bg-gradient-to-r from-sky-500 to-purple-500 hover:from-sky-600 hover:to-purple-600 text-white rounded-full font-medium transition-all transform hover:scale-105 text-sm sm:text-base"
+                >
+                  <span className="hidden xs:inline">Get Started</span>
+                  <span className="xs:hidden">Start</span>
+                  <ChevronRightIcon className="w-4 h-4" />
+                </button>
+                
+                {isAuthenticated && (
+                  <button
+                    onClick={onDisable}
+                    className="flex items-center gap-1 sm:gap-2 px-3 py-2 sm:px-4 sm:py-2 bg-slate-700 hover:bg-slate-600 text-slate-300 hover:text-white rounded-full font-medium transition-all text-sm"
+                  >
+                    <XMarkIcon className="w-4 h-4" />
+                    <span className="hidden sm:inline">Don't Show Again</span>
+                    <span className="sm:hidden">Skip</span>
+                  </button>
+                )}
+              </div>
+            </div>
+          ) : (
+            // Regular navigation
+            <div className="flex justify-between items-center">
+              <button
+                onClick={prevSlide}
+                disabled={currentSlide === 0}
+                className={`flex items-center gap-1 sm:gap-2 px-3 py-2 sm:px-4 sm:py-2 rounded-full font-medium transition-all text-sm ${
+                  currentSlide === 0
+                    ? 'text-slate-500 cursor-not-allowed'
+                    : 'text-white bg-slate-700 hover:bg-slate-600'
+                }`}
+              >
+                <ChevronLeftIcon className="w-4 h-4" />
+                <span className="hidden sm:inline">Previous</span>
+              </button>
+
+              <div className="flex gap-2">
+                {slides.map((_, index) => (
+                  <div
+                    key={index}
+                    className={`w-2 h-2 rounded-full transition-all ${
+                      index === currentSlide
+                        ? 'bg-sky-400 w-6'
+                        : index < currentSlide
+                        ? 'bg-green-400'
+                        : 'bg-slate-600'
+                    }`}
+                  />
+                ))}
+              </div>
+
+              <button
+                onClick={nextSlide}
+                className="flex items-center gap-1 sm:gap-2 px-3 py-2 sm:px-4 sm:py-2 bg-gradient-to-r from-sky-500 to-purple-500 hover:from-sky-600 hover:to-purple-600 text-white rounded-full font-medium transition-all transform hover:scale-105 text-sm"
+              >
+                <span className="hidden sm:inline">Next</span>
+                <ChevronRightIcon className="w-4 h-4" />
+              </button>
+            </div>
+          )}
         </div>
-
-        <button
-          onClick={nextSlide}
-          className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-sky-500 to-purple-500 hover:from-sky-600 hover:to-purple-600 text-white rounded-full font-medium transition-all transform hover:scale-105"
-        >
-          {currentSlide === slides.length - 1 ? 'Get Started' : 'Next'}
-          <ChevronRightIcon className="w-4 h-4" />
-        </button>
       </div>
     </div>
   );
