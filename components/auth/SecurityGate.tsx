@@ -65,7 +65,7 @@ const SecurityGate: React.FC<SecurityGateProps> = ({
       const result = await BiometricService.authenticate(reason);
       
       if (result.success) {
-        addToast('Authentication successful!', 'success');
+        // Success authentication without toast - it will show in main app
         onAuthenticated();
       } else {
         setError(result.error || 'Biometric authentication failed');
@@ -102,9 +102,10 @@ const SecurityGate: React.FC<SecurityGateProps> = ({
       const hashedPin = btoa(pin); // Base64 encoding for demo
       
       if (hashedPin === securitySettings.pinHash) {
-        addToast('Authentication successful!', 'success');
+        // Success authentication without toast - it will show in main app
         onAuthenticated();
       } else {
+        // Show error directly in the PIN input form instead of toast
         setError('Incorrect PIN. Please try again.');
       }
     } catch (error: any) {

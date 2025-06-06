@@ -51,17 +51,45 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [requiresSecurityAuth, setRequiresSecurityAuth] = useState(false);
 
+  // Store the previous auth state for detecting new login
+  const [previousAuthState, setPreviousAuthState] = useState<string | null>(null);
+  
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
       if (firebaseUser) {
-        setUser(mapFirebaseUser(firebaseUser));
+        // Map Firebase user to our User type
+        const mappedUser = mapFirebaseUser(firebaseUser);
+        setUser(mappedUser);
+        
+        // Check if this is a new login (not a page refresh)
+        // We use localStorage to keep track across page reloads
+        const currentAuthState = localStorage.getItem('authState');
+        if (currentAuthState !== firebaseUser.uid) {
+          // This is a new login
+          localStorage.setItem('authState', firebaseUser.uid);
+          
+          // Show welcome toast after successful login
+          // Delay to ensure it appears after navigation completes
+          setTimeout(() => {
+            const displayName = firebaseUser.displayName || 
+                               firebaseUser.email?.split('@')[0] || 'User';
+            
+            window.dispatchEvent(new CustomEvent('show-toast', { 
+              detail: { message: `Welcome back, ${displayName}!`, type: 'success' }
+            }));
+          }, 500);
+        }
 
         // Check if security authentication is required
         const shouldRequireAuth = UserDataManager.shouldRequireAuthentication(firebaseUser.uid);
         setRequiresSecurityAuth(shouldRequireAuth);
       } else {
+        // No user is signed in
         setUser(null);
         setRequiresSecurityAuth(false);
+        
+        // Clear auth state when logging out
+        localStorage.removeItem('authState');
       }
       setLoading(false);
     });
@@ -96,7 +124,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
     };
 
-    const listener = App.addListener('appStateChange', handleAppStateChange);
+    let cleanup: (() => void) | undefined;
+    
+    // Add the app state change listener
+    const setupListener = async () => {
+      const listener = await App.addListener('appStateChange', handleAppStateChange);
+      cleanup = () => {
+        listener.remove();
+      };
+    };
+    
+    setupListener();
 
     // Check authentication requirement on initial mount
     const checkInitialAuth = async () => {
@@ -109,7 +147,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     checkInitialAuth();
 
     return () => {
-      listener.remove();
+      if (cleanup) cleanup();
     };
   }, [user]);
 
@@ -132,7 +170,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const signIn = async (email: string, password: string): Promise<void> => {
     try {
-      await signInWithEmailAndPassword(auth, email, password);
+      // Don't perform any toast-related actions here
+      // Just authenticate the user
+      const result = await signInWithEmailAndPassword(auth, email, password);
+      
+      // No need to dispatch login success events here
+      // We'll show a welcome toast in the main app through onAuthStateChanged
     } catch (error: any) {
       throw new Error(getAuthErrorMessage(error.code));
     }
@@ -140,7 +183,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const signInWithGoogle = async (): Promise<void> => {
     try {
+      // Don't perform any toast-related actions here
+      // Just authenticate the user
       await signInWithPopup(auth, googleProvider);
+      
+      // No need to dispatch login success events here
+      // We'll show a welcome toast in the main app through onAuthStateChanged
     } catch (error: any) {
       throw new Error(getAuthErrorMessage(error.code));
     }
@@ -194,6 +242,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setRequiresSecurityAuth(false);
     if (user) {
       UserDataManager.setAppInForeground(user.uid);
+      
+      // Show welcome back message after security auth (subtle, not with name)
+      setTimeout(() => {
+        window.dispatchEvent(new CustomEvent('show-toast', { 
+          detail: { message: `Authentication successful`, type: 'success', duration: 2000 }
+        }));
+      }, 300);
     }
   };
 

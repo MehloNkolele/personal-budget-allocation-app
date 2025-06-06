@@ -81,10 +81,8 @@ const AppContent: React.FC = () => {
         setMonthlyBudgets(userData.monthlyBudgets);
         setIsDataLoaded(true);
 
-        // Show welcome message for new users (only if no migration occurred)
-        if (!migrationSuccessful && !UserDataManager.hasUserData(user.uid)) {
-          addToast(`Welcome ${user.displayName || user.email}! Your data is now isolated and secure.`, 'info');
-        }
+        // Don't show welcome message for new users about data isolation
+        // (Original message removed as requested by user)
       } catch (error) {
         console.error("Error loading user data:", error);
         addToast("Error loading your data. Please try refreshing the page.", 'error');
@@ -566,8 +564,6 @@ const AppContent: React.FC = () => {
           selectedCurrency={selectedCurrency}
         />
       </main>
-
-
     </div>
   );
 };

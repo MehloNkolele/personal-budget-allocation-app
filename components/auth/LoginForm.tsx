@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useToast } from '../../hooks/useToast';
 import { AuthFormData } from '../../types';
+import ErrorDisplay from './ErrorDisplay';
 
 interface LoginFormProps {
   onSwitchToRegister: () => void;
@@ -26,32 +27,43 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister, onForgotPassw
     }));
   };
 
+  // Add state for login errors
+  const [loginError, setLoginError] = useState<string | null>(null);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Reset previous error
+    setLoginError(null);
+    
     if (!formData.email || !formData.password) {
-      addToast('Please fill in all fields.', 'error');
+      setLoginError('Please fill in all fields.');
       return;
     }
 
     setIsLoading(true);
     try {
       await signIn(formData.email, formData.password);
-      addToast('Successfully signed in!', 'success');
+      // Success toast will be displayed after successful login
     } catch (error: any) {
-      addToast(error.message, 'error');
+      // Show login errors directly on the form, not as toast
+      setLoginError(error.message);
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleGoogleSignIn = async () => {
+    // Reset previous error
+    setLoginError(null);
+    
     setIsLoading(true);
     try {
       await signInWithGoogle();
-      addToast('Successfully signed in with Google!', 'success');
+      // Success toast will be displayed after successful login
     } catch (error: any) {
-      addToast(error.message, 'error');
+      // Show login errors directly on the form, not as toast
+      setLoginError(error.message);
     } finally {
       setIsLoading(false);
     }
@@ -130,10 +142,13 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister, onForgotPassw
             </button>
           </div>
 
+          {/* Display login errors inline */}
+          <ErrorDisplay message={loginError} />
+
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full bg-sky-600 hover:bg-sky-700 disabled:bg-slate-600 disabled:cursor-not-allowed text-white font-semibold py-3 px-4 rounded-lg transition-colors duration-200"
+            className="w-full bg-sky-600 hover:bg-sky-700 disabled:bg-slate-600 disabled:cursor-not-allowed text-white font-semibold py-3 px-4 rounded-lg transition-colors duration-200 mt-4"
           >
             {isLoading ? 'Signing In...' : 'Sign In'}
           </button>

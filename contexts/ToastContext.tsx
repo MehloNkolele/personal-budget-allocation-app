@@ -30,6 +30,21 @@ export const ToastProvider: React.FC<ToastProviderProps> = ({ children }) => {
   const clearAllToasts = useCallback(() => {
     setToasts([]);
   }, []);
+  
+  // Listen for custom toast events from auth context
+  React.useEffect(() => {
+    const handleShowToast = (event: any) => {
+      if (event.detail && event.detail.message) {
+        addToast(event.detail.message, event.detail.type || 'info', event.detail.duration);
+      }
+    };
+    
+    window.addEventListener('show-toast', handleShowToast);
+    
+    return () => {
+      window.removeEventListener('show-toast', handleShowToast);
+    };
+  }, [addToast]);
 
   return (
     <ToastContext.Provider value={{ toasts, addToast, removeToast, clearAllToasts }}>

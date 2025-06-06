@@ -834,6 +834,83 @@ const UserSettings: React.FC<UserSettingsProps> = ({ isOpen, onClose }) => {
       />
 
       {/* PIN Setup Modal */}
+      {/* About Section - Full Width */}
+      <div className="mt-8 bg-gradient-to-br from-purple-900/30 to-blue-800/30 border border-purple-500/50 rounded-2xl p-6 backdrop-blur-sm">
+        <div className="flex items-center space-x-3 mb-6">
+          <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-blue-600 rounded-xl flex items-center justify-center">
+            <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <div>
+            <h3 className="text-xl font-bold text-white">About</h3>
+            <p className="text-purple-200 text-sm">App information and developer details</p>
+          </div>
+        </div>
+
+        <div className="bg-purple-900/40 border border-purple-500/30 rounded-xl p-6">
+          <div className="space-y-6">
+            {/* App Information */}
+            <div className="mb-4">
+              <h4 className="text-lg font-semibold text-purple-300 mb-2">Personal Budget Planner</h4>
+              <p className="text-slate-300 text-sm mb-1">Version 1.0.0</p>
+              <p className="text-slate-300 text-sm leading-relaxed">
+                Take control of your finances with ease. Manage your budget categories, track expenses,
+                and gain insights into your spending patterns.
+              </p>
+            </div>
+            
+            {/* Developer Information */}
+            <div className="space-y-3">
+              <h4 className="text-lg font-semibold text-purple-300 mb-2">Developer</h4>
+              
+              <div className="flex flex-col sm:flex-row">
+                <div className="font-medium text-slate-300 w-28">Created by:</div>
+                <div className="text-white">Bennet Nkolele</div>
+              </div>
+              
+              <div className="flex flex-col sm:flex-row">
+                <div className="font-medium text-slate-300 w-28">Contact:</div>
+                <div className="text-white">
+                  <a href="tel:+27810903232" className="text-blue-400 hover:text-blue-300 transition-colors">+27 81 090 3232</a>
+                  <br className="sm:hidden" />
+                  <span className="hidden sm:inline"> | </span>
+                  <a href="mailto:bennet.nkolele1998@gmail.com" className="text-blue-400 hover:text-blue-300 transition-colors">bennet.nkolele1998@gmail.com</a>
+                </div>
+              </div>
+
+              <div className="pt-3 space-y-2">
+                <a href="https://react-personal-portfolio-alpha.vercel.app/" target="_blank" rel="noopener noreferrer" className="flex items-center space-x-2 text-blue-400 hover:text-blue-300 transition-colors">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
+                  </svg>
+                  <span>Portfolio</span>
+                </a>
+
+                <a href="https://github.com/BennetNkolele" target="_blank" rel="noopener noreferrer" className="flex items-center space-x-2 text-blue-400 hover:text-blue-300 transition-colors">
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                    <path fillRule="evenodd" clipRule="evenodd" d="M12 2C6.477 2 2 6.477 2 12c0 4.42 2.865 8.166 6.839 9.489.5.092.682-.217.682-.482 0-.237-.008-.866-.013-1.7-2.782.602-3.369-1.34-3.369-1.34-.454-1.156-1.11-1.462-1.11-1.462-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.564 9.564 0 0112 6.839a9.56 9.56 0 012.504.337c1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.202 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.743 0 .267.18.578.688.48A10.019 10.019 0 0022 12c0-5.523-4.477-10-10-10z" />
+                  </svg>
+                  <span>GitHub</span>
+                </a>
+
+                <a href="https://www.linkedin.com/in/bennetnkolele" target="_blank" rel="noopener noreferrer" className="flex items-center space-x-2 text-blue-400 hover:text-blue-300 transition-colors">
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z" />
+                  </svg>
+                  <span>LinkedIn</span>
+                </a>
+              </div>
+            </div>
+
+            {/* Copyright */}
+            <div className="pt-4 text-center">
+              <p className="text-slate-400 text-sm">© 2025 Bennet Nkolele. All rights reserved.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {showPinSetup && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setShowPinSetup(false)} />

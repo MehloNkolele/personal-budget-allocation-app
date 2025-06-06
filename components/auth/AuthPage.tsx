@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import LoginForm from './LoginForm';
 import RegisterForm from './RegisterForm';
 import ForgotPasswordForm from './ForgotPasswordForm';
+import Toaster from '../Toaster'; // Add Toaster component for scoped error messages
 
 type AuthMode = 'login' | 'register' | 'forgot-password';
 
@@ -36,6 +37,9 @@ const AuthPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
+      {/* AuthPage has its own Toaster instance limited to auth-related messages */}
+      <Toaster />
+      
       <div className="w-full max-w-md">
         {/* App Header */}
         <div className="text-center mb-8">
@@ -50,7 +54,7 @@ const AuthPage: React.FC = () => {
         {/* Auth Form */}
         {renderAuthForm()}
 
-        {/* Footer */}
+        {/* Authentication Info */}
         <div className="text-center mt-8">
           <p className="text-sm text-slate-500">
             Secure authentication powered by Firebase
