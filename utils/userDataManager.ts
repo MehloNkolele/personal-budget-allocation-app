@@ -417,8 +417,9 @@ export class UserDataManager {
       return false;
     }
 
-    // Require authentication if app was in background for more than 30 seconds
+    // Require authentication if app was in background for more than 5 seconds
+    // This makes it more responsive for testing, can be adjusted as needed
     const timeDiff = Date.now() - parseInt(backgroundTime);
-    return timeDiff > 30000; // 30 seconds
+    return timeDiff > 5000; // 5 seconds
   }
 }

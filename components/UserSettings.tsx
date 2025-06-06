@@ -566,23 +566,23 @@ const UserSettings: React.FC<UserSettingsProps> = ({ isOpen, onClose }) => {
         <div className="bg-indigo-900/40 border border-indigo-500/30 rounded-xl p-6">
           <div className="space-y-6">
             {/* Splash Screen Setting */}
-            <div className="flex items-center justify-between p-4 bg-slate-800/50 rounded-xl border border-slate-600/30">
-              <div className="flex items-start space-x-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-slate-800/50 rounded-xl border border-slate-600/30">
+              <div className="flex items-start space-x-3">
                 <div className="flex-shrink-0">
-                  <div className="w-12 h-12 bg-indigo-500/20 rounded-xl flex items-center justify-center">
-                    <svg className="w-6 h-6 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-indigo-500/20 rounded-xl flex items-center justify-center">
+                    <svg className="w-5 h-5 sm:w-6 sm:h-6 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                   </div>
                 </div>
                 <div className="flex-grow">
-                  <h4 className="text-indigo-300 font-bold text-lg mb-2">Welcome Introduction</h4>
-                  <p className="text-slate-300 text-sm leading-relaxed">
+                  <h4 className="text-indigo-300 font-bold text-lg mb-1 sm:mb-2">Welcome Introduction</h4>
+                  <p className="text-slate-300 text-xs sm:text-sm leading-relaxed">
                     Show the interactive welcome tour when you sign in. This introduction helps you learn about all the app features and can be disabled here.
                   </p>
                 </div>
               </div>
-              <div className="flex-shrink-0 ml-4">
+              <div className="flex-shrink-0 mt-4 sm:mt-0 sm:ml-4 self-end sm:self-center">
                 <button
                   onClick={() => handleSplashScreenToggle(!showSplashScreen)}
                   className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-800 ${
@@ -616,21 +616,21 @@ const UserSettings: React.FC<UserSettingsProps> = ({ isOpen, onClose }) => {
         <div className="bg-emerald-900/40 border border-emerald-500/30 rounded-xl p-6">
           <div className="space-y-6">
             {/* Enable Security */}
-            <div className="flex items-center justify-between p-4 bg-slate-800/50 rounded-xl border border-slate-600/30">
-              <div className="flex items-start space-x-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-slate-800/50 rounded-xl border border-slate-600/30">
+              <div className="flex items-start space-x-3">
                 <div className="flex-shrink-0">
-                  <div className="w-12 h-12 bg-emerald-500/20 rounded-xl flex items-center justify-center">
-                    <LockClosedIcon className="w-6 h-6 text-emerald-400" />
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-emerald-500/20 rounded-xl flex items-center justify-center">
+                    <LockClosedIcon className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-400" />
                   </div>
                 </div>
                 <div className="flex-grow">
-                  <h4 className="text-emerald-300 font-bold text-lg mb-2">App Security</h4>
-                  <p className="text-slate-300 text-sm leading-relaxed">
+                  <h4 className="text-emerald-300 font-bold text-lg mb-1 sm:mb-2">App Security</h4>
+                  <p className="text-slate-300 text-xs sm:text-sm leading-relaxed">
                     Require authentication when reopening the app. This adds an extra layer of security to protect your financial data.
                   </p>
                 </div>
               </div>
-              <div className="flex-shrink-0 ml-4">
+              <div className="flex-shrink-0 mt-4 sm:mt-0 sm:ml-4 self-end sm:self-center">
                 <button
                   onClick={() => handleSecurityToggle(!securitySettings.isEnabled)}
                   disabled={isUpdatingSecurity}
@@ -678,7 +678,7 @@ const UserSettings: React.FC<UserSettingsProps> = ({ isOpen, onClose }) => {
                     />
                     <div className="flex items-center space-x-2">
                       <LockClosedIcon className="w-4 h-4 text-emerald-400" />
-                      <span className="text-white font-medium">PIN Only</span>
+                      <span className="text-white font-medium text-sm sm:text-base">PIN Only</span>
                     </div>
                   </label>
 
@@ -695,13 +695,13 @@ const UserSettings: React.FC<UserSettingsProps> = ({ isOpen, onClose }) => {
                       disabled={isUpdatingSecurity || !biometricAvailable}
                       className="w-4 h-4 text-emerald-600 bg-slate-700 border-slate-500 focus:ring-emerald-500 focus:ring-2"
                     />
-                    <div className="flex items-center space-x-2">
+                    <div className="flex flex-wrap items-center space-x-2">
                       <FingerPrintIcon className="w-4 h-4 text-emerald-400" />
-                      <span className="text-white font-medium">
+                      <span className="text-white font-medium text-sm sm:text-base">
                         {biometricType || 'Biometric'} Only
                       </span>
                       {!biometricAvailable && (
-                        <span className="text-xs text-slate-400">(Not Available)</span>
+                        <span className="text-xs text-slate-400 ml-1 mt-0.5">(Not Available)</span>
                       )}
                     </div>
                   </label>
@@ -776,36 +776,36 @@ const UserSettings: React.FC<UserSettingsProps> = ({ isOpen, onClose }) => {
       </div>
 
       {/* Data Management Section - Full Width */}
-      <div className="mt-8 bg-gradient-to-br from-red-900/30 to-red-800/30 border border-red-500/50 rounded-2xl p-6 backdrop-blur-sm">
-        <div className="flex items-center space-x-3 mb-6">
-          <div className="w-10 h-10 bg-gradient-to-br from-red-500 to-red-600 rounded-xl flex items-center justify-center">
-            <TrashIcon className="w-5 h-5 text-white" />
+      <div className="mt-8 bg-gradient-to-br from-red-900/30 to-red-800/30 border border-red-500/50 rounded-2xl p-4 sm:p-6 backdrop-blur-sm">
+        <div className="flex items-center space-x-2 sm:space-x-3 mb-4 sm:mb-6">
+          <div className="w-9 h-9 sm:w-10 sm:h-10 bg-gradient-to-br from-red-500 to-red-600 rounded-lg sm:rounded-xl flex items-center justify-center">
+            <TrashIcon className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
           </div>
           <div>
-            <h3 className="text-xl font-bold text-white">Data Management</h3>
-            <p className="text-red-200 text-sm">Manage your account data</p>
+            <h3 className="text-lg sm:text-xl font-bold text-white">Data Management</h3>
+            <p className="text-red-200 text-xs sm:text-sm">Manage your account data</p>
           </div>
         </div>
 
-        <div className="bg-red-900/40 border border-red-500/30 rounded-xl p-6">
-          <div className="flex items-start space-x-4">
+        <div className="bg-red-900/40 border border-red-500/30 rounded-lg sm:rounded-xl p-4 sm:p-6">
+          <div className="flex flex-col sm:flex-row sm:items-start space-y-4 sm:space-y-0 sm:space-x-4">
             <div className="flex-shrink-0">
-              <div className="w-12 h-12 bg-red-500/20 rounded-xl flex items-center justify-center">
-                <svg className="w-6 h-6 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-red-500/20 rounded-lg sm:rounded-xl flex items-center justify-center">
+                <svg className="w-5 h-5 sm:w-6 sm:h-6 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
                 </svg>
               </div>
             </div>
             <div className="flex-grow">
-              <h4 className="text-red-300 font-bold text-lg mb-2">⚠️ Clear All Data</h4>
-              <p className="text-slate-300 text-sm mb-4 leading-relaxed">
+              <h4 className="text-red-300 font-bold text-base sm:text-lg mb-2">⚠️ Clear All Data</h4>
+              <p className="text-slate-300 text-xs sm:text-sm mb-4 leading-relaxed">
                 This will permanently delete <strong>ALL</strong> your budget data including categories, transactions,
                 monthly budgets, and settings. This action cannot be undone and will completely reset your account.
               </p>
               <button
                 type="button"
                 onClick={() => setShowClearDataConfirmation(true)}
-                className="bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-bold py-3 px-6 rounded-xl transition-all duration-200 hover:shadow-lg hover:shadow-red-500/25 border border-red-500/50"
+                className="w-full sm:w-auto bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-bold py-2 sm:py-3 px-4 sm:px-6 rounded-lg sm:rounded-xl transition-all duration-200 hover:shadow-lg hover:shadow-red-500/25 border border-red-500/50"
               >
                 🗑️ Clear All Data
               </button>

@@ -5,6 +5,7 @@ import { useToast } from '../../hooks/useToast';
 import PinInput from './PinInput';
 import { LockClosedIcon, FingerPrintIcon } from '../../constants';
 import { SecuritySettings } from '../../types';
+import { Capacitor } from '@capacitor/core';
 
 interface SecurityGateProps {
   userId: string;
@@ -125,12 +126,36 @@ const SecurityGate: React.FC<SecurityGateProps> = ({
     setError('');
   };
 
-  // Auto-trigger biometric authentication when component loads
+  // Auto-trigger biometric authentication when component loads or becomes visible
   useEffect(() => {
     if (securitySettings && authMethod === 'biometric' && biometricAvailable && !isLoading) {
-      handleBiometricAuth();
+      // Add a small delay to ensure the component is fully rendered
+      const timer = setTimeout(() => {
+        handleBiometricAuth();
+      }, 300);
+      
+      return () => clearTimeout(timer);
     }
   }, [securitySettings, authMethod, biometricAvailable]);
+  
+  // Handle visibility change to retry biometric auth if the user switches back to the app
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform()) return;
+    
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible' && 
+          securitySettings && 
+          authMethod === 'biometric' && 
+          biometricAvailable && 
+          !isLoading) {
+        // User returned to the app, try biometric again if we're on the biometric screen
+        handleBiometricAuth();
+      }
+    };
+    
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, [securitySettings, authMethod, biometricAvailable, isLoading]);
 
   if (!securitySettings) {
     return (

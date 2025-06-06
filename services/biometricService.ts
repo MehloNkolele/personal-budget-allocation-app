@@ -1,4 +1,4 @@
-import { NativeBiometric, BiometryType } from '@capgo/capacitor-native-biometric';
+import { NativeBiometric, BiometryType, AvailableResult } from '@capgo/capacitor-native-biometric';
 import { Capacitor } from '@capacitor/core';
 import { BiometricAuthResult } from '../types';
 
@@ -65,10 +65,11 @@ export class BiometricService {
       });
 
       const biometryType = await this.getBiometryType();
+      const typeName = biometryType ? this.getBiometricTypeName(biometryType) : undefined;
       
       return {
         success: true,
-        biometryType: biometryType || undefined
+        biometryType: typeName
       };
     } catch (error: any) {
       console.error('Biometric authentication error:', error);
@@ -140,13 +141,8 @@ export class BiometricService {
         };
       }
 
-      if (!result.hasEnrolledBiometrics) {
-        return {
-          canUse: false,
-          reason: 'No biometric data is enrolled on this device'
-        };
-      }
-
+      // Some devices/implementations don't have this property, so we'll assume biometrics are 
+      // enrolled if the library reports they're available
       return { canUse: true };
     } catch (error) {
       console.error('Error checking biometric capability:', error);

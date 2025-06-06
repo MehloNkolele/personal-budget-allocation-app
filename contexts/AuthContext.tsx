@@ -73,21 +73,40 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   useEffect(() => {
     if (!Capacitor.isNativePlatform() || !user) return;
 
-    const handleAppStateChange = (state: any) => {
+    const handleAppStateChange = async (state: any) => {
+      console.log('App state changed:', state);
+      
       if (state.isActive) {
         // App came to foreground
-        UserDataManager.setAppInForeground(user.uid);
-
+        console.log('App came to foreground, checking if authentication is required');
+        
         // Check if security authentication is required
         const shouldRequireAuth = UserDataManager.shouldRequireAuthentication(user.uid);
-        setRequiresSecurityAuth(shouldRequireAuth);
+        console.log('Should require auth:', shouldRequireAuth);
+        
+        if (shouldRequireAuth) {
+          setRequiresSecurityAuth(true);
+        } else {
+          UserDataManager.setAppInForeground(user.uid);
+        }
       } else {
         // App went to background
+        console.log('App went to background, setting background state');
         UserDataManager.setAppInBackground(user.uid);
       }
     };
 
     const listener = App.addListener('appStateChange', handleAppStateChange);
+
+    // Check authentication requirement on initial mount
+    const checkInitialAuth = async () => {
+      const shouldRequireAuth = UserDataManager.shouldRequireAuthentication(user.uid);
+      if (shouldRequireAuth) {
+        setRequiresSecurityAuth(true);
+      }
+    };
+    
+    checkInitialAuth();
 
     return () => {
       listener.remove();
