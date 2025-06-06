@@ -1,5 +1,4 @@
-
-import React from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Category, Subcategory } from '../types';
 import CategoryCard from './CategoryCard';
 import { PlusIcon } from '../constants';
@@ -31,8 +30,38 @@ const CategoryManager: React.FC<CategoryManagerProps> = ({
   formatCurrency,
   areGlobalAmountsHidden,
 }) => {
+  // Track which category is expanded
+  const [expandedCategoryId, setExpandedCategoryId] = useState<string | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // Handle click outside to collapse the expanded category
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        containerRef.current && 
+        expandedCategoryId &&
+        !event.composedPath().some(el => 
+          el instanceof HTMLElement && 
+          el.getAttribute('data-category-id') === expandedCategoryId
+        )
+      ) {
+        setExpandedCategoryId(null);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [expandedCategoryId]);
+
+  // Toggle the expanded state of a category
+  const toggleCategoryExpanded = (categoryId: string) => {
+    setExpandedCategoryId(prevId => prevId === categoryId ? null : categoryId);
+  };
+
   return (
-    <div className="mb-6">
+    <div className="mb-6" ref={containerRef}>
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-2xl font-semibold text-sky-400">Budget Categories</h2>
         <button
@@ -78,6 +107,8 @@ const CategoryManager: React.FC<CategoryManagerProps> = ({
               onToggleSubcategoryComplete={onToggleSubcategoryComplete}
               formatCurrency={formatCurrency}
               areGlobalAmountsHidden={areGlobalAmountsHidden}
+              isExpanded={expandedCategoryId === category.id}
+              onToggleExpand={() => toggleCategoryExpanded(category.id)}
             />
           ))}
         </div>

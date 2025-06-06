@@ -8,7 +8,6 @@ import BudgetHistory from './components/BudgetHistory';
 import Modal from './components/Modal';
 import CategoryForm from './components/CategoryForm';
 import SubcategoryForm from './components/SubcategoryForm';
-import TransactionForm from './components/TransactionForm';
 import ConfirmationModal from './components/ConfirmationModal';
 import Navbar from './components/Navbar';
 import ProtectedRoute from './components/auth/ProtectedRoute';
@@ -20,6 +19,8 @@ import { useToast } from './hooks/useToast';
 import { useNotifications } from './hooks/useNotifications';
 import Toaster from './components/Toaster';
 import { UserDataManager } from './utils/userDataManager';
+import { Capacitor } from '@capacitor/core';
+import { App as CapApp } from '@capacitor/app';
 
 const AppContent: React.FC = () => {
   const { addToast, clearAllToasts } = useToast();
@@ -34,8 +35,8 @@ const AppContent: React.FC = () => {
   const [isIncomeHidden, setIsIncomeHidden] = useState<boolean>(true);
   const [monthlyBudgets, setMonthlyBudgets] = useState<MonthlyBudget[]>([]);
   const [currentSection, setCurrentSection] = useState<'dashboard' | 'categories' | 'reports' | 'planning' | 'history'>('dashboard');
-  const [isTransactionFormOpen, setIsTransactionFormOpen] = useState<boolean>(false);
   const [isDataLoaded, setIsDataLoaded] = useState<boolean>(false);
+  const [navigationHistory, setNavigationHistory] = useState<Array<'dashboard' | 'categories' | 'reports' | 'planning' | 'history'>>(['dashboard']);
 
   // Add event listener for beforeunload to hide income when app is closed
   useEffect(() => {
@@ -60,6 +61,69 @@ const AppContent: React.FC = () => {
       window.removeEventListener('beforeunload', handleAppClose);
     };
   }, [user?.uid]);
+
+  // Handle back button on mobile devices
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform()) return;
+
+    const handleBackButton = () => {
+      console.log('Back button pressed');
+      
+      // If a modal is open, close it instead of navigating back
+      if (modalState !== null) {
+        setModalState(null);
+        return;
+      }
+
+      // If we have navigation history and we're not on the first screen
+      if (navigationHistory.length > 1) {
+        // Remove current screen from history
+        const newHistory = [...navigationHistory];
+        newHistory.pop();
+        
+        // Get previous screen
+        const previousScreen = newHistory[newHistory.length - 1];
+        
+        // Navigate to previous screen
+        setCurrentSection(previousScreen);
+        setNavigationHistory(newHistory);
+      }
+    };
+
+    // Register back button handler
+    const setupBackButtonHandler = async () => {
+      try {
+        await CapApp.addListener('backButton', () => {
+          handleBackButton();
+        });
+      } catch (error) {
+        console.error('Error setting up back button handler:', error);
+      }
+    };
+
+    setupBackButtonHandler();
+
+    // Cleanup
+    return () => {
+      const cleanupBackButtonHandler = async () => {
+        try {
+          await CapApp.removeAllListeners();
+        } catch (error) {
+          console.error('Error removing back button handler:', error);
+        }
+      };
+      cleanupBackButtonHandler();
+    };
+  }, [modalState, navigationHistory]);
+
+  // Modified setCurrentSection function to track navigation history
+  const handleSectionChange = useCallback((section: 'dashboard' | 'categories' | 'reports' | 'planning' | 'history') => {
+    // Don't add to history if it's the same as current section
+    if (section !== currentSection) {
+      setNavigationHistory(prev => [...prev, section]);
+      setCurrentSection(section);
+    }
+  }, [currentSection]);
 
   // Load user-specific data when user changes
   useEffect(() => {
@@ -281,50 +345,6 @@ const AppContent: React.FC = () => {
     setCategories(prev => prev.map(cat => cat.id === parentCategoryId ? { ...cat, subcategories: cat.subcategories.map(sub => sub.id === subcategoryId ? { ...sub, isComplete: !sub.isComplete } : sub) } : cat));
   }, []);
 
-  // Transaction Management Functions
-  const addTransaction = useCallback((transactionData: Omit<Transaction, 'id'>) => {
-    const newTransaction: Transaction = {
-      ...transactionData,
-      id: Date.now().toString()
-    };
-
-    setTransactions(prev => [...prev, newTransaction]);
-
-    // Update spending amounts for categories and subcategories
-    if (transactionData.type === 'expense') {
-      setCategories(prev => prev.map(cat => {
-        if (cat.id === transactionData.categoryId) {
-          const updatedCategory = {
-            ...cat,
-            spentAmount: (cat.spentAmount || 0) + transactionData.amount
-          };
-
-          if (transactionData.subcategoryId) {
-            updatedCategory.subcategories = cat.subcategories.map(sub =>
-              sub.id === transactionData.subcategoryId
-                ? { ...sub, spentAmount: (sub.spentAmount || 0) + transactionData.amount }
-                : sub
-            );
-          }
-
-          return updatedCategory;
-        }
-        return cat;
-      }));
-    }
-
-    addToast('Transaction added successfully!', 'success');
-    setIsTransactionFormOpen(false);
-  }, [addToast]);
-
-  const openTransactionForm = useCallback(() => {
-    setIsTransactionFormOpen(true);
-  }, []);
-
-  const closeTransactionForm = useCallback(() => {
-    setIsTransactionFormOpen(false);
-  }, []);
-
   const openAddCategoryModal = useCallback(() => setModalState({ type: 'addCategory' }), []);
   const openEditCategoryModal = useCallback((category: Category) => setModalState({ type: 'editCategory', category }), []);
   const openAddSubcategoryModal = useCallback((parentCategoryId: string) => setModalState({ type: 'addSubcategory', parentCategoryId }), []);
@@ -500,9 +520,8 @@ const AppContent: React.FC = () => {
       {/* Enhanced Navbar */}
       <Navbar
         onAddCategory={openAddCategoryModal}
-        onAddTransaction={openTransactionForm}
         currentSection={currentSection}
-        onSectionChange={setCurrentSection}
+        onSectionChange={handleSectionChange}
       />
 
       {/* Main Content */}
@@ -553,15 +572,6 @@ const AppContent: React.FC = () => {
           confirmText="Delete"
           cancelText="Cancel"
           isDangerous={true}
-        />
-
-        {/* Transaction Form */}
-        <TransactionForm
-          isOpen={isTransactionFormOpen}
-          onClose={closeTransactionForm}
-          onSubmit={addTransaction}
-          categories={categories}
-          selectedCurrency={selectedCurrency}
         />
       </main>
     </div>

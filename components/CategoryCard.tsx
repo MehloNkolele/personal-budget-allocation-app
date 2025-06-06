@@ -1,8 +1,7 @@
-
 import React from 'react';
 import { Category, Subcategory } from '../types';
 import ProgressBar from './ProgressBar';
-import { PencilIcon, TrashIcon, PlusIcon, EyeIcon, EyeSlashIcon, CheckIcon } from '../constants';
+import { PencilIcon, TrashIcon, PlusIcon, EyeIcon, EyeSlashIcon, CheckIcon, ChevronDownIcon, ChevronUpIcon } from '../constants';
 
 interface CategoryCardProps {
   category: Category;
@@ -15,6 +14,8 @@ interface CategoryCardProps {
   onToggleSubcategoryComplete: (parentCategoryId: string, subcategoryId: string) => void;
   formatCurrency: (amount: number, isIndividualItemHidden?: boolean) => string;
   areGlobalAmountsHidden: boolean;
+  isExpanded: boolean;
+  onToggleExpand: () => void;
 }
 
 const CategoryCard: React.FC<CategoryCardProps> = ({
@@ -28,19 +29,36 @@ const CategoryCard: React.FC<CategoryCardProps> = ({
   onToggleSubcategoryComplete,
   formatCurrency,
   areGlobalAmountsHidden,
+  isExpanded,
+  onToggleExpand,
 }) => {
   const subcategoriesTotal = category.subcategories.reduce((sum, sub) => sum + sub.allocatedAmount, 0);
   const remainingInCategory = category.allocatedAmount - subcategoriesTotal;
   const isCategoryAmountEffectivelyHidden = areGlobalAmountsHidden || category.isAmountHidden;
+  const hasSubcategories = category.subcategories.length > 0;
 
   return (
-    <div className="bg-slate-800 p-4 rounded-lg shadow-md">
+    <div 
+      className="bg-slate-800 p-4 rounded-lg shadow-md" 
+      data-category-id={category.id}
+    >
       <div className="flex justify-between items-start mb-3">
-        <div>
-          <h3 className="text-lg font-semibold text-emerald-400">{category.name}</h3>
-          <p className="text-sm text-slate-400">
-            Allocated: {formatCurrency(category.allocatedAmount, category.isAmountHidden)}
-          </p>
+        <div className="flex items-start">
+          {hasSubcategories && (
+            <button
+              onClick={onToggleExpand}
+              className="mr-2 p-1 text-slate-400 hover:text-emerald-400 transition-colors mt-0.5"
+              aria-label={isExpanded ? `Collapse ${category.name}` : `Expand ${category.name}`}
+            >
+              {isExpanded ? <ChevronUpIcon className="w-4 h-4" /> : <ChevronDownIcon className="w-4 h-4" />}
+            </button>
+          )}
+          <div>
+            <h3 className="text-lg font-semibold text-emerald-400">{category.name}</h3>
+            <p className="text-sm text-slate-400">
+              Allocated: {formatCurrency(category.allocatedAmount, category.isAmountHidden)}
+            </p>
+          </div>
         </div>
         <div className="flex space-x-1 items-center">
            <button
@@ -91,56 +109,86 @@ const CategoryCard: React.FC<CategoryCardProps> = ({
          <div className="mb-3 h-2.5 bg-slate-700 rounded-full text-xs flex items-center justify-center text-slate-400">Progress hidden</div>
       )}
 
+      {hasSubcategories && !isExpanded && (
+        <div className="text-sm text-slate-400 mb-3">
+          {category.subcategories.length} subcategories
+        </div>
+      )}
 
-      <div className="space-y-2 mb-3">
-        {category.subcategories.map((sub) => (
-          <div 
-            key={sub.id} 
-            className={`bg-slate-700/50 p-2.5 rounded-md flex justify-between items-center ${sub.isComplete ? 'opacity-70' : ''}`}
-          >
-            <div className="flex items-center space-x-2">
-                <button 
-                    onClick={() => onToggleSubcategoryComplete(category.id, sub.id)}
-                    aria-label={sub.isComplete ? `Mark ${sub.name} as incomplete` : `Mark ${sub.name} as complete`}
-                    className={`flex-shrink-0 w-5 h-5 rounded border-2 ${sub.isComplete ? 'bg-emerald-500 border-emerald-400' : 'border-slate-500 hover:border-emerald-400'} transition-all flex items-center justify-center`}
-                    aria-pressed={sub.isComplete}
-                >
-                    {sub.isComplete && <CheckIcon className="w-3.5 h-3.5 text-white" />}
-                </button>
-              <div>
-                <p className={`text-slate-200 ${sub.isComplete ? 'line-through' : ''}`}>{sub.name}</p>
-                <p className={`text-xs text-slate-400 ${sub.isComplete ? 'line-through' : ''}`}>
-                  Allocated: {formatCurrency(sub.allocatedAmount, category.isAmountHidden)}
-                </p>
+      {isExpanded && (
+        <>
+          <div className="space-y-2 mb-3">
+            {category.subcategories.map((sub) => (
+              <div 
+                key={sub.id} 
+                className={`bg-slate-700/50 p-2.5 rounded-md flex justify-between items-center ${sub.isComplete ? 'opacity-70' : ''}`}
+              >
+                <div className="flex items-center space-x-2">
+                    <button 
+                        onClick={() => onToggleSubcategoryComplete(category.id, sub.id)}
+                        aria-label={sub.isComplete ? `Mark ${sub.name} as incomplete` : `Mark ${sub.name} as complete`}
+                        className={`flex-shrink-0 w-5 h-5 rounded border-2 ${sub.isComplete ? 'bg-emerald-500 border-emerald-400' : 'border-slate-500 hover:border-emerald-400'} transition-all flex items-center justify-center`}
+                        aria-pressed={sub.isComplete}
+                    >
+                        {sub.isComplete && <CheckIcon className="w-3.5 h-3.5 text-white" />}
+                    </button>
+                  <div>
+                    <p className={`text-slate-200 ${sub.isComplete ? 'line-through' : ''}`}>{sub.name}</p>
+                    <p className={`text-xs text-slate-400 ${sub.isComplete ? 'line-through' : ''}`}>
+                      Allocated: {formatCurrency(sub.allocatedAmount, category.isAmountHidden)}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex space-x-1.5">
+                  <button
+                    onClick={() => onEditSubcategory(category.id, sub)}
+                    className="p-1.5 text-slate-400 hover:text-sky-300 transition-colors"
+                    aria-label={`Edit subcategory ${sub.name}`}
+                  >
+                    <PencilIcon className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() => onDeleteSubcategory(category.id, sub.id)}
+                    className="p-1.5 text-slate-400 hover:text-red-300 transition-colors"
+                    aria-label={`Delete subcategory ${sub.name}`}
+                  >
+                    <TrashIcon className="w-4 h-4" />
+                  </button>
+                </div>
               </div>
-            </div>
-            <div className="flex space-x-1.5">
-              <button
-                onClick={() => onEditSubcategory(category.id, sub)}
-                className="p-1.5 text-slate-400 hover:text-sky-300 transition-colors"
-                aria-label={`Edit subcategory ${sub.name}`}
-              >
-                <PencilIcon className="w-4 h-4" />
-              </button>
-              <button
-                onClick={() => onDeleteSubcategory(category.id, sub.id)}
-                className="p-1.5 text-slate-400 hover:text-red-300 transition-colors"
-                aria-label={`Delete subcategory ${sub.name}`}
-              >
-                <TrashIcon className="w-4 h-4" />
-              </button>
-            </div>
+            ))}
           </div>
-        ))}
-      </div>
 
-      <button
-        onClick={() => onAddSubcategory(category.id)}
-        className="w-full flex items-center justify-center space-x-2 px-3 py-2.5 text-sm font-medium text-emerald-300 bg-emerald-600/30 hover:bg-emerald-500/40 rounded-md transition border border-emerald-600/50 hover:border-emerald-500"
-      >
-        <PlusIcon className="w-4 h-4" />
-        <span>Add Subcategory</span>
-      </button>
+          <button
+            onClick={() => onAddSubcategory(category.id)}
+            className="w-full flex items-center justify-center space-x-2 px-3 py-2.5 text-sm font-medium text-emerald-300 bg-emerald-600/30 hover:bg-emerald-500/40 rounded-md transition border border-emerald-600/50 hover:border-emerald-500"
+          >
+            <PlusIcon className="w-4 h-4" />
+            <span>Add Subcategory</span>
+          </button>
+        </>
+      )}
+
+      {!isExpanded && hasSubcategories && (
+        <button
+          onClick={onToggleExpand}
+          className="w-full flex items-center justify-center space-x-2 px-3 py-2.5 text-sm font-medium text-slate-300 bg-slate-700/50 hover:bg-slate-600/50 rounded-md transition"
+          aria-label={`Show subcategories for ${category.name}`}
+        >
+          <span>Show Subcategories</span>
+          <ChevronDownIcon className="w-4 h-4" />
+        </button>
+      )}
+
+      {!hasSubcategories && (
+        <button
+          onClick={() => onAddSubcategory(category.id)}
+          className="w-full flex items-center justify-center space-x-2 px-3 py-2.5 text-sm font-medium text-emerald-300 bg-emerald-600/30 hover:bg-emerald-500/40 rounded-md transition border border-emerald-600/50 hover:border-emerald-500"
+        >
+          <PlusIcon className="w-4 h-4" />
+          <span>Add Subcategory</span>
+        </button>
+      )}
     </div>
   );
 };
