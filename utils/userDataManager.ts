@@ -1,9 +1,10 @@
-import { Category, Transaction, BudgetData, MonthlyBudget, BudgetTemplate } from '../types';
+import { Category, Transaction, BudgetData, MonthlyBudget, BudgetTemplate, SecuritySettings } from '../types';
 import { CURRENCIES } from '../constants';
 
 // User preferences interface
 export interface UserPreferences {
   showSplashScreen: boolean;
+  security: SecuritySettings;
   // Add more preferences here in the future
 }
 
@@ -328,21 +329,39 @@ export class UserDataManager {
   static loadUserPreferences(userId: string): UserPreferences {
     try {
       const savedPreferences = localStorage.getItem(this.getUserKey(userId, 'preferences'));
+      const defaultSecurity: SecuritySettings = {
+        isEnabled: false,
+        authMethod: 'pin',
+        requireOnAppResume: true,
+        requireOnSensitiveActions: false
+      };
+
       if (savedPreferences) {
         const parsedPreferences = JSON.parse(savedPreferences);
         // Ensure all required properties exist with defaults
         return {
           showSplashScreen: parsedPreferences.showSplashScreen ?? true,
+          security: {
+            ...defaultSecurity,
+            ...parsedPreferences.security
+          },
           ...parsedPreferences
         };
       }
       return {
-        showSplashScreen: true
+        showSplashScreen: true,
+        security: defaultSecurity
       };
     } catch (error) {
       console.error("Error loading user preferences:", error);
       return {
-        showSplashScreen: true
+        showSplashScreen: true,
+        security: {
+          isEnabled: false,
+          authMethod: 'pin',
+          requireOnAppResume: true,
+          requireOnSensitiveActions: false
+        }
       };
     }
   }
@@ -355,5 +374,51 @@ export class UserDataManager {
     const preferences = this.loadUserPreferences(userId);
     preferences.showSplashScreen = showSplashScreen;
     this.saveUserPreferences(userId, preferences);
+  }
+
+  // Security preferences management
+  static updateSecuritySettings(userId: string, securitySettings: SecuritySettings): void {
+    const preferences = this.loadUserPreferences(userId);
+    preferences.security = securitySettings;
+    this.saveUserPreferences(userId, preferences);
+  }
+
+  static getSecuritySettings(userId: string): SecuritySettings {
+    const preferences = this.loadUserPreferences(userId);
+    return preferences.security;
+  }
+
+  static isSecurityEnabled(userId: string): boolean {
+    const securitySettings = this.getSecuritySettings(userId);
+    return securitySettings.isEnabled;
+  }
+
+  // App state management for security
+  static setAppInBackground(userId: string): void {
+    localStorage.setItem(this.getUserKey(userId, 'appInBackground'), 'true');
+    localStorage.setItem(this.getUserKey(userId, 'backgroundTime'), Date.now().toString());
+  }
+
+  static setAppInForeground(userId: string): void {
+    localStorage.removeItem(this.getUserKey(userId, 'appInBackground'));
+    localStorage.removeItem(this.getUserKey(userId, 'backgroundTime'));
+  }
+
+  static shouldRequireAuthentication(userId: string): boolean {
+    const wasInBackground = localStorage.getItem(this.getUserKey(userId, 'appInBackground'));
+    const backgroundTime = localStorage.getItem(this.getUserKey(userId, 'backgroundTime'));
+
+    if (!wasInBackground || !backgroundTime) {
+      return false;
+    }
+
+    const securitySettings = this.getSecuritySettings(userId);
+    if (!securitySettings.isEnabled || !securitySettings.requireOnAppResume) {
+      return false;
+    }
+
+    // Require authentication if app was in background for more than 30 seconds
+    const timeDiff = Date.now() - parseInt(backgroundTime);
+    return timeDiff > 30000; // 30 seconds
   }
 }

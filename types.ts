@@ -181,6 +181,7 @@ export interface BudgetPlanningData {
 export interface AuthContextType {
   user: User | null;
   loading: boolean;
+  requiresSecurityAuth: boolean;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, displayName?: string) => Promise<void>;
   signInWithGoogle: () => Promise<void>;
@@ -189,6 +190,8 @@ export interface AuthContextType {
   updateUserProfile: (displayName: string, photoURL?: string | null) => Promise<void>;
   updateUserPassword: (currentPassword: string, newPassword: string) => Promise<void>;
   clearUserData: () => Promise<void>;
+  completeSecurityAuth: () => void;
+  requireSecurityAuth: () => void;
 }
 
 export interface AuthFormData {
@@ -209,3 +212,18 @@ export interface PasswordChangeData {
   newPassword: string;
   confirmNewPassword: string;
 }
+
+// Security Settings Types
+export interface SecuritySettings {
+  isEnabled: boolean;
+  authMethod: 'pin' | 'biometric' | 'both';
+  pinHash?: string; // Hashed PIN for security
+  requireOnAppResume: boolean;
+  requireOnSensitiveActions: boolean;
+}
+
+export type BiometricAuthResult = {
+  success: boolean;
+  error?: string;
+  biometryType?: string;
+};

@@ -15,6 +15,8 @@ import {
 import { auth, googleProvider } from '../firebase.config';
 import { User, AuthContextType } from '../types';
 import { UserDataManager } from '../utils/userDataManager';
+import { Capacitor } from '@capacitor/core';
+import { App } from '@capacitor/app';
 
 interface AuthProviderProps {
   children: ReactNode;
@@ -47,19 +49,50 @@ const mapFirebaseUser = (firebaseUser: FirebaseUser): User => {
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [requiresSecurityAuth, setRequiresSecurityAuth] = useState(false);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
       if (firebaseUser) {
         setUser(mapFirebaseUser(firebaseUser));
+
+        // Check if security authentication is required
+        const shouldRequireAuth = UserDataManager.shouldRequireAuthentication(firebaseUser.uid);
+        setRequiresSecurityAuth(shouldRequireAuth);
       } else {
         setUser(null);
+        setRequiresSecurityAuth(false);
       }
       setLoading(false);
     });
 
     return unsubscribe;
   }, []);
+
+  // Set up app state listeners for mobile
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform() || !user) return;
+
+    const handleAppStateChange = (state: any) => {
+      if (state.isActive) {
+        // App came to foreground
+        UserDataManager.setAppInForeground(user.uid);
+
+        // Check if security authentication is required
+        const shouldRequireAuth = UserDataManager.shouldRequireAuthentication(user.uid);
+        setRequiresSecurityAuth(shouldRequireAuth);
+      } else {
+        // App went to background
+        UserDataManager.setAppInBackground(user.uid);
+      }
+    };
+
+    const listener = App.addListener('appStateChange', handleAppStateChange);
+
+    return () => {
+      listener.remove();
+    };
+  }, [user]);
 
   const signUp = async (email: string, password: string, displayName?: string): Promise<void> => {
     try {
@@ -137,6 +170,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
+  // Security authentication methods
+  const completeSecurityAuth = (): void => {
+    setRequiresSecurityAuth(false);
+    if (user) {
+      UserDataManager.setAppInForeground(user.uid);
+    }
+  };
+
+  const requireSecurityAuth = (): void => {
+    setRequiresSecurityAuth(true);
+  };
+
   const resetPassword = async (email: string): Promise<void> => {
     try {
       await sendPasswordResetEmail(auth, email);
@@ -209,6 +254,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const value: AuthContextType = {
     user,
     loading,
+    requiresSecurityAuth,
     signIn,
     signUp,
     signInWithGoogle,
@@ -217,6 +263,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     updateUserProfile,
     updateUserPassword,
     clearUserData,
+    completeSecurityAuth,
+    requireSecurityAuth,
   };
 
   return (

@@ -3,9 +3,11 @@ import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../hooks/useToast';
 import SettingsModal from './SettingsModal';
 import DangerousActionModal from './DangerousActionModal';
-import { UserIcon, PhotoIcon, LockClosedIcon, EyeIcon, EyeSlashIcon, TrashIcon } from '../constants';
-import { PasswordChangeData } from '../types';
+import { UserIcon, PhotoIcon, LockClosedIcon, EyeIcon, EyeSlashIcon, TrashIcon, FingerPrintIcon } from '../constants';
+import { PasswordChangeData, SecuritySettings } from '../types';
 import { UserDataManager } from '../utils/userDataManager';
+import { BiometricService } from '../services/biometricService';
+import PinInput from './auth/PinInput';
 
 interface UserSettingsProps {
   isOpen: boolean;
@@ -40,13 +42,39 @@ const UserSettings: React.FC<UserSettingsProps> = ({ isOpen, onClose }) => {
   // Preferences state
   const [showSplashScreen, setShowSplashScreen] = useState(true);
 
+  // Security settings state
+  const [securitySettings, setSecuritySettings] = useState<SecuritySettings>({
+    isEnabled: false,
+    authMethod: 'pin',
+    requireOnAppResume: true,
+    requireOnSensitiveActions: false
+  });
+  const [showPinSetup, setShowPinSetup] = useState(false);
+  const [biometricAvailable, setBiometricAvailable] = useState(false);
+  const [biometricType, setBiometricType] = useState<string>('');
+  const [isUpdatingSecurity, setIsUpdatingSecurity] = useState(false);
+
   // Load user preferences on mount
   useEffect(() => {
     if (user?.uid) {
       const preferences = UserDataManager.loadUserPreferences(user.uid);
       setShowSplashScreen(preferences.showSplashScreen);
+      setSecuritySettings(preferences.security);
+
+      // Check biometric availability
+      checkBiometricAvailability();
     }
   }, [user?.uid]);
+
+  const checkBiometricAvailability = async () => {
+    const { canUse } = await BiometricService.canUseBiometric();
+    setBiometricAvailable(canUse);
+
+    if (canUse) {
+      const type = await BiometricService.getBiometryType();
+      setBiometricType(BiometricService.getBiometricTypeName(type));
+    }
+  };
 
   const handleProfilePictureChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -178,6 +206,93 @@ const UserSettings: React.FC<UserSettingsProps> = ({ isOpen, onClose }) => {
       } catch (error: any) {
         addToast('Failed to update splash screen preference', 'error');
       }
+    }
+  };
+
+  // Security settings handlers
+  const handleSecurityToggle = async (enabled: boolean) => {
+    if (!user?.uid) return;
+
+    if (enabled && !securitySettings.pinHash) {
+      // Need to set up PIN first
+      setShowPinSetup(true);
+      return;
+    }
+
+    setIsUpdatingSecurity(true);
+    try {
+      const updatedSettings = { ...securitySettings, isEnabled: enabled };
+      UserDataManager.updateSecuritySettings(user.uid, updatedSettings);
+      setSecuritySettings(updatedSettings);
+      addToast(`Security ${enabled ? 'enabled' : 'disabled'} successfully!`, 'success');
+    } catch (error: any) {
+      addToast('Failed to update security settings', 'error');
+    } finally {
+      setIsUpdatingSecurity(false);
+    }
+  };
+
+  const handleAuthMethodChange = async (method: 'pin' | 'biometric' | 'both') => {
+    if (!user?.uid) return;
+
+    if (method === 'biometric' || method === 'both') {
+      if (!biometricAvailable) {
+        addToast('Biometric authentication is not available on this device', 'error');
+        return;
+      }
+    }
+
+    setIsUpdatingSecurity(true);
+    try {
+      const updatedSettings = { ...securitySettings, authMethod: method };
+      UserDataManager.updateSecuritySettings(user.uid, updatedSettings);
+      setSecuritySettings(updatedSettings);
+      addToast('Authentication method updated successfully!', 'success');
+    } catch (error: any) {
+      addToast('Failed to update authentication method', 'error');
+    } finally {
+      setIsUpdatingSecurity(false);
+    }
+  };
+
+  const handlePinSetup = async (pin: string) => {
+    if (!user?.uid) return;
+
+    setIsUpdatingSecurity(true);
+    try {
+      // Simple hash for demo (use proper hashing in production)
+      const hashedPin = btoa(pin);
+
+      const updatedSettings = {
+        ...securitySettings,
+        isEnabled: true,
+        pinHash: hashedPin
+      };
+
+      UserDataManager.updateSecuritySettings(user.uid, updatedSettings);
+      setSecuritySettings(updatedSettings);
+      setShowPinSetup(false);
+      addToast('PIN set up successfully! Security is now enabled.', 'success');
+    } catch (error: any) {
+      addToast('Failed to set up PIN', 'error');
+    } finally {
+      setIsUpdatingSecurity(false);
+    }
+  };
+
+  const handleRequireOnResumeToggle = async (enabled: boolean) => {
+    if (!user?.uid) return;
+
+    setIsUpdatingSecurity(true);
+    try {
+      const updatedSettings = { ...securitySettings, requireOnAppResume: enabled };
+      UserDataManager.updateSecuritySettings(user.uid, updatedSettings);
+      setSecuritySettings(updatedSettings);
+      addToast(`Authentication on app resume ${enabled ? 'enabled' : 'disabled'}!`, 'success');
+    } catch (error: any) {
+      addToast('Failed to update setting', 'error');
+    } finally {
+      setIsUpdatingSecurity(false);
     }
   };
 
@@ -486,6 +601,180 @@ const UserSettings: React.FC<UserSettingsProps> = ({ isOpen, onClose }) => {
         </div>
       </div>
 
+      {/* Security Settings Section - Full Width */}
+      <div className="mt-8 bg-gradient-to-br from-emerald-900/30 to-green-800/30 border border-emerald-500/50 rounded-2xl p-6 backdrop-blur-sm">
+        <div className="flex items-center space-x-3 mb-6">
+          <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-green-600 rounded-xl flex items-center justify-center">
+            <LockClosedIcon className="w-5 h-5 text-white" />
+          </div>
+          <div>
+            <h3 className="text-xl font-bold text-white">Security Settings</h3>
+            <p className="text-emerald-200 text-sm">Protect your budget data with PIN or biometric authentication</p>
+          </div>
+        </div>
+
+        <div className="bg-emerald-900/40 border border-emerald-500/30 rounded-xl p-6">
+          <div className="space-y-6">
+            {/* Enable Security */}
+            <div className="flex items-center justify-between p-4 bg-slate-800/50 rounded-xl border border-slate-600/30">
+              <div className="flex items-start space-x-4">
+                <div className="flex-shrink-0">
+                  <div className="w-12 h-12 bg-emerald-500/20 rounded-xl flex items-center justify-center">
+                    <LockClosedIcon className="w-6 h-6 text-emerald-400" />
+                  </div>
+                </div>
+                <div className="flex-grow">
+                  <h4 className="text-emerald-300 font-bold text-lg mb-2">App Security</h4>
+                  <p className="text-slate-300 text-sm leading-relaxed">
+                    Require authentication when reopening the app. This adds an extra layer of security to protect your financial data.
+                  </p>
+                </div>
+              </div>
+              <div className="flex-shrink-0 ml-4">
+                <button
+                  onClick={() => handleSecurityToggle(!securitySettings.isEnabled)}
+                  disabled={isUpdatingSecurity}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 focus:ring-offset-slate-800 disabled:opacity-50 ${
+                    securitySettings.isEnabled ? 'bg-emerald-600' : 'bg-slate-600'
+                  }`}
+                >
+                  <span
+                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform duration-300 ${
+                      securitySettings.isEnabled ? 'translate-x-6' : 'translate-x-1'
+                    }`}
+                  />
+                </button>
+              </div>
+            </div>
+
+            {/* Authentication Method Selection */}
+            {securitySettings.isEnabled && (
+              <div className="p-4 bg-slate-800/50 rounded-xl border border-slate-600/30">
+                <div className="flex items-start space-x-4 mb-4">
+                  <div className="flex-shrink-0">
+                    <div className="w-12 h-12 bg-emerald-500/20 rounded-xl flex items-center justify-center">
+                      <FingerPrintIcon className="w-6 h-6 text-emerald-400" />
+                    </div>
+                  </div>
+                  <div className="flex-grow">
+                    <h4 className="text-emerald-300 font-bold text-lg mb-2">Authentication Method</h4>
+                    <p className="text-slate-300 text-sm leading-relaxed mb-4">
+                      Choose how you want to authenticate when accessing the app.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  {/* PIN Option */}
+                  <label className="flex items-center space-x-3 p-3 bg-slate-700/50 rounded-lg cursor-pointer hover:bg-slate-700/70 transition-colors">
+                    <input
+                      type="radio"
+                      name="authMethod"
+                      value="pin"
+                      checked={securitySettings.authMethod === 'pin'}
+                      onChange={() => handleAuthMethodChange('pin')}
+                      disabled={isUpdatingSecurity}
+                      className="w-4 h-4 text-emerald-600 bg-slate-700 border-slate-500 focus:ring-emerald-500 focus:ring-2"
+                    />
+                    <div className="flex items-center space-x-2">
+                      <LockClosedIcon className="w-4 h-4 text-emerald-400" />
+                      <span className="text-white font-medium">PIN Only</span>
+                    </div>
+                  </label>
+
+                  {/* Biometric Option */}
+                  <label className={`flex items-center space-x-3 p-3 bg-slate-700/50 rounded-lg transition-colors ${
+                    biometricAvailable ? 'cursor-pointer hover:bg-slate-700/70' : 'cursor-not-allowed opacity-50'
+                  }`}>
+                    <input
+                      type="radio"
+                      name="authMethod"
+                      value="biometric"
+                      checked={securitySettings.authMethod === 'biometric'}
+                      onChange={() => handleAuthMethodChange('biometric')}
+                      disabled={isUpdatingSecurity || !biometricAvailable}
+                      className="w-4 h-4 text-emerald-600 bg-slate-700 border-slate-500 focus:ring-emerald-500 focus:ring-2"
+                    />
+                    <div className="flex items-center space-x-2">
+                      <FingerPrintIcon className="w-4 h-4 text-emerald-400" />
+                      <span className="text-white font-medium">
+                        {biometricType || 'Biometric'} Only
+                      </span>
+                      {!biometricAvailable && (
+                        <span className="text-xs text-slate-400">(Not Available)</span>
+                      )}
+                    </div>
+                  </label>
+
+                  {/* Both Option */}
+                  <label className={`flex items-center space-x-3 p-3 bg-slate-700/50 rounded-lg transition-colors ${
+                    biometricAvailable ? 'cursor-pointer hover:bg-slate-700/70' : 'cursor-not-allowed opacity-50'
+                  }`}>
+                    <input
+                      type="radio"
+                      name="authMethod"
+                      value="both"
+                      checked={securitySettings.authMethod === 'both'}
+                      onChange={() => handleAuthMethodChange('both')}
+                      disabled={isUpdatingSecurity || !biometricAvailable}
+                      className="w-4 h-4 text-emerald-600 bg-slate-700 border-slate-500 focus:ring-emerald-500 focus:ring-2"
+                    />
+                    <div className="flex items-center space-x-2">
+                      <div className="flex space-x-1">
+                        <FingerPrintIcon className="w-4 h-4 text-emerald-400" />
+                        <LockClosedIcon className="w-4 h-4 text-emerald-400" />
+                      </div>
+                      <span className="text-white font-medium">
+                        {biometricType || 'Biometric'} with PIN Fallback
+                      </span>
+                      {!biometricAvailable && (
+                        <span className="text-xs text-slate-400">(Not Available)</span>
+                      )}
+                    </div>
+                  </label>
+                </div>
+              </div>
+            )}
+
+            {/* Require on App Resume */}
+            {securitySettings.isEnabled && (
+              <div className="flex items-center justify-between p-4 bg-slate-800/50 rounded-xl border border-slate-600/30">
+                <div className="flex items-start space-x-4">
+                  <div className="flex-shrink-0">
+                    <div className="w-12 h-12 bg-emerald-500/20 rounded-xl flex items-center justify-center">
+                      <svg className="w-6 h-6 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                      </svg>
+                    </div>
+                  </div>
+                  <div className="flex-grow">
+                    <h4 className="text-emerald-300 font-bold text-lg mb-2">Require on App Resume</h4>
+                    <p className="text-slate-300 text-sm leading-relaxed">
+                      Require authentication when returning to the app after it has been in the background for more than 30 seconds.
+                    </p>
+                  </div>
+                </div>
+                <div className="flex-shrink-0 ml-4">
+                  <button
+                    onClick={() => handleRequireOnResumeToggle(!securitySettings.requireOnAppResume)}
+                    disabled={isUpdatingSecurity}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 focus:ring-offset-slate-800 disabled:opacity-50 ${
+                      securitySettings.requireOnAppResume ? 'bg-emerald-600' : 'bg-slate-600'
+                    }`}
+                  >
+                    <span
+                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform duration-300 ${
+                        securitySettings.requireOnAppResume ? 'translate-x-6' : 'translate-x-1'
+                      }`}
+                    />
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
       {/* Data Management Section - Full Width */}
       <div className="mt-8 bg-gradient-to-br from-red-900/30 to-red-800/30 border border-red-500/50 rounded-2xl p-6 backdrop-blur-sm">
         <div className="flex items-center space-x-3 mb-6">
@@ -543,6 +832,24 @@ const UserSettings: React.FC<UserSettingsProps> = ({ isOpen, onClose }) => {
           'All reports and analytics data'
         ]}
       />
+
+      {/* PIN Setup Modal */}
+      {showPinSetup && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setShowPinSetup(false)} />
+          <div className="relative z-10 w-full max-w-md mx-4">
+            <PinInput
+              onPinComplete={handlePinSetup}
+              onCancel={() => setShowPinSetup(false)}
+              title="Set Up PIN"
+              subtitle="Create a 4-digit PIN to secure your budget data"
+              isLoading={isUpdatingSecurity}
+              mode="setup"
+              showCancel={true}
+            />
+          </div>
+        </div>
+      )}
     </SettingsModal>
   );
 };
