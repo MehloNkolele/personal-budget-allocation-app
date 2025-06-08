@@ -16,7 +16,6 @@ interface MobileMenuProps {
   currentSection: string;
   onSectionChange: (section: string) => void;
   onAddCategory: () => void;
-  onAddTransaction?: () => void;
 }
 
 const MobileMenu: React.FC<MobileMenuProps> = ({
@@ -25,8 +24,7 @@ const MobileMenu: React.FC<MobileMenuProps> = ({
   navItems,
   currentSection,
   onSectionChange,
-  onAddCategory,
-  onAddTransaction
+  onAddCategory
 }) => {
   const [isAnimating, setIsAnimating] = useState(false);
 
@@ -72,13 +70,6 @@ const MobileMenu: React.FC<MobileMenuProps> = ({
   const handleAddCategory = () => {
     onAddCategory();
     onClose();
-  };
-
-  const handleAddTransaction = () => {
-    if (onAddTransaction) {
-      onAddTransaction();
-      onClose();
-    }
   };
 
   if (!isOpen && !isAnimating) return null;
@@ -207,21 +198,6 @@ const MobileMenu: React.FC<MobileMenuProps> = ({
                 </svg>
               </div>
             </button>
-
-            {onAddTransaction && (
-              <button
-                onClick={handleAddTransaction}
-                className="w-full flex items-center space-x-3 px-4 py-3.5 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-700 hover:to-emerald-600 text-white rounded-xl transition-all duration-300 shadow-lg shadow-emerald-600/30 hover:shadow-emerald-600/40 hover:scale-105 group"
-              >
-                <PlusIcon className="w-5 h-5 transition-transform duration-200 group-hover:rotate-90" />
-                <span className="font-medium">Add Transaction</span>
-                <div className="ml-auto opacity-60">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
-                </div>
-              </button>
-            )}
           </div>
         </div>
 

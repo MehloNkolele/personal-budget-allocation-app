@@ -21,6 +21,12 @@ A secure, mobile-first budget allocation application with Firebase authenticatio
 - Amount visibility controls
 - Progress tracking for subcategories
 
+### 💡 Intelligent Savings Calculator
+- **Dual Calculation Modes**: Plan your savings by setting a target goal or a desired timeline.
+- **Smart Recommendations**: Get personalized advice based on your income and goals, inspired by the 50/30/20 rule.
+- **Feasibility Analysis**: The calculator warns you if a savings plan is unrealistic and provides alternative suggestions.
+- **Visual Progress**: See your savings journey visualized with progress bars.
+
 ### 🛡️ Security & Data Features
 - Firebase Authentication integration
 - **User Data Isolation**: Each user has completely separate data storage
@@ -96,6 +102,7 @@ Each user has completely isolated data storage:
 - **Build Tool**: Vite
 - **State Management**: React Context API
 - **Charts**: Recharts for data visualization
+- **Savings Logic**: Custom-built intelligent savings calculator
 - **Deployment**: Vercel
 
 ## 🚀 Deployment
