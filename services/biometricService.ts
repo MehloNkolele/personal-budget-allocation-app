@@ -152,4 +152,34 @@ export class BiometricService {
       };
     }
   }
+
+  /**
+   * Hashes a PIN using SHA-256 for secure storage.
+   * @param pin - The PIN string to hash.
+   * @returns A promise that resolves to the hex-encoded hash string.
+   */
+  static async hashPin(pin: string): Promise<string> {
+    if (typeof window === 'undefined' || !window.crypto || !window.crypto.subtle) {
+      // Fallback for non-secure contexts (e.g., some test environments)
+      // This is NOT secure and should not be used in production if crypto is expected.
+      console.warn('SubtleCrypto not available. Using a non-secure fallback for hashing.');
+      return `fallback_${pin}`;
+    }
+
+    const encoder = new TextEncoder();
+    const data = encoder.encode(pin);
+    const hashBuffer = await window.crypto.subtle.digest('SHA-256', data);
+    return this.bufferToHex(hashBuffer);
+  }
+
+  /**
+   * Converts an ArrayBuffer to a hexadecimal string.
+   * @param buffer - The ArrayBuffer to convert.
+   * @returns The hexadecimal string representation.
+   */
+  private static bufferToHex(buffer: ArrayBuffer): string {
+    return Array.from(new Uint8Array(buffer))
+      .map(b => b.toString(16).padStart(2, '0'))
+      .join('');
+  }
 }

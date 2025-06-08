@@ -10,6 +10,7 @@ interface DangerousActionModalProps {
   confirmText?: string;
   cancelText?: string;
   warningItems?: string[];
+  isActionInProgress?: boolean;
 }
 
 const DangerousActionModal: React.FC<DangerousActionModalProps> = ({
@@ -21,6 +22,7 @@ const DangerousActionModal: React.FC<DangerousActionModalProps> = ({
   confirmText = 'Yes, I understand',
   cancelText = 'No, Keep My Data',
   warningItems = [],
+  isActionInProgress = false,
 }) => {
   if (!isOpen) return null;
 
@@ -104,9 +106,10 @@ const DangerousActionModal: React.FC<DangerousActionModalProps> = ({
           {/* Confirm button - now muted and gray */}
           <button
             onClick={handleConfirm}
-            className="px-6 py-3 text-base font-medium text-slate-400 bg-slate-700 hover:bg-slate-600 rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2 focus:ring-offset-slate-800 border border-slate-600"
+            disabled={isActionInProgress}
+            className="px-6 py-3 text-base font-medium text-slate-400 bg-slate-700 hover:bg-slate-600 rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2 focus:ring-offset-slate-800 border border-slate-600 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {confirmText}
+            {isActionInProgress ? 'Deleting...' : confirmText}
           </button>
         </div>
 

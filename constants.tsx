@@ -248,10 +248,54 @@ export const FingerPrintIcon: React.FC<{ className?: string }> = ({ className = 
   </svg>
 );
 
+export const PhoneIcon: React.FC<{ className?: string }> = ({ className = "w-5 h-5" }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 0 0 2.25-2.25v-1.372c0-.516-.211-.992-.58-1.355l-3.116-3.117a2.25 2.25 0 0 0-1.591-.659h-2.25a2.25 2.25 0 0 0-2.25 2.25v1.5a.75.75 0 0 1-.75.75h-1.5a.75.75 0 0 1-.75-.75v-4.5a.75.75 0 0 1 .75-.75h1.5a.75.75 0 0 0 .75-.75V6.75a2.25 2.25 0 0 0-2.25-2.25H6.75A2.25 2.25 0 0 0 4.5 6.75v.75c0 .414.336.75.75.75h1.5a.75.75 0 0 1 .75.75v1.5a2.25 2.25 0 0 0 2.25 2.25h1.5a2.25 2.25 0 0 0 2.25-2.25v-2.25a2.25 2.25 0 0 0-2.25-2.25H8.25A2.25 2.25 0 0 0 6 6.75" />
+    </svg>
+);
+
+export const EnvelopeIcon: React.FC<{ className?: string }> = ({ className = "w-5 h-5" }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 9v.906a2.25 2.25 0 0 1-1.183 1.981l-6.478 3.488a2.25 2.25 0 0 1-2.178 0L4.427 11.887A2.25 2.25 0 0 1 3.244 9.906V9a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21.75 9Z" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 13.5v3.75a2.25 2.25 0 0 1-2.25 2.25h-9A2.25 2.25 0 0 1 3 17.25V9" />
+    </svg>
+);
+
+export const ArrowLeftIcon: React.FC<{ className?: string }> = ({ className = "w-6 h-6" }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" />
+    </svg>
+);
+
+export const ArrowRightIcon: React.FC<{ className?: string }> = ({ className = "w-6 h-6" }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
+    </svg>
+);
+
+export const CalculatorIcon: React.FC<{ className?: string }> = ({ className = "w-6 h-6" }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 15.75V18m-7.5-6.75h.008v.008H8.25v-.008Zm0 3h.008v.008H8.25v-.008Zm0 3h.008v.008H8.25v-.008Zm3-6h.008v.008H11.25v-.008Zm0 3h.008v.008H11.25v-.008Zm0 3h.008v.008H11.25v-.008Zm3-6h.008v.008H14.25v-.008Zm0 3h.008v.008H14.25v-.008ZM6 21a2.25 2.25 0 0 1-2.25-2.25V15a2.25 2.25 0 0 1 2.25-2.25h5.25A2.25 2.25 0 0 1 13.5 15v.75a.75.75 0 0 0 1.5 0v-.75a3.75 3.75 0 0 0-3.75-3.75H6a3.75 3.75 0 0 0-3.75 3.75v3.75A3.75 3.75 0 0 0 6 21h12a3.75 3.75 0 0 0 3.75-3.75V9.75A3.75 3.75 0 0 0 18 6h-6a3.75 3.75 0 0 0-3.75 3.75v.75a.75.75 0 0 0 1.5 0v-.75a2.25 2.25 0 0 1 2.25-2.25h6a2.25 2.25 0 0 1 2.25 2.25v8.25a2.25 2.25 0 0 1-2.25 2.25H6Z" />
+    </svg>
+);
+
+export const ChartPieIcon: React.FC<{ className?: string }> = ({ className = "w-6 h-6" }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 6a7.5 7.5 0 1 0 7.5 7.5h-7.5V6Z" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 10.5H21A7.5 7.5 0 0 0 13.5 3v7.5Z" />
+    </svg>
+);
+
+export const LightBulbIcon: React.FC<{ className?: string }> = ({ className = "w-6 h-6" }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M12 18v-5.25m0 0a6.01 6.01 0 0 0 1.5-4.59c0-2.042-.983-3.93-2.612-5.122A5.986 5.986 0 0 0 9 7.152c0 2.042.983 3.93 2.612 5.122a6.01 6.01 0 0 0 1.5 4.59M12 18a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6Zm-3 4.5a.75.75 0 0 0 .75.75h4.5a.75.75 0 0 0 .75-.75V19.5h-6v3Z" />
+    </svg>
+);
+
 export const CURRENCIES = [
+  { value: 'USD', label: '$ USD' },
+  { value: 'EUR', label: '€ EUR' },
   { code: 'ZAR', name: 'South African Rand (R)' },
-  { code: 'USD', name: 'US Dollar ($)' },
-  { code: 'EUR', name: 'Euro (€)' },
   { code: 'GBP', name: 'British Pound (£)' },
   { code: 'JPY', name: 'Japanese Yen (¥)' },
   { code: 'CAD', name: 'Canadian Dollar (C$)' },

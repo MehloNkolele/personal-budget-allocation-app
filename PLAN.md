@@ -40,4 +40,41 @@ This document outlines the development plan for the Personal Budget Allocation A
 - [x] **Component Refactor:** Reverted `src/components/SavingsCalculator.tsx` to a clearer structure.
     - [x] Restored the primary "Goal" vs. "Timeline" toggle for distinct planning modes.
     - [x] Re-implemented the nested "Auto" vs. "Manual" toggle, which appears only under the "Goal" mode.
-    - [x] This structural change provides a more intuitive user flow, directly addressing user confusion. 
+    - [x] This structural change provides a more intuitive user flow, directly addressing user confusion.
+
+## [2024-07-25] - Redesign "About" Screen (User Request)
+- [x] **Component Creation:** Created a new, dedicated `src/components/AboutScreen.tsx`.
+    - [x] Designed a modern, full-screen, animated UI using `framer-motion`.
+    - [x] Implemented a two-column layout for app and developer information.
+    - [x] Added dynamic links for portfolio, GitHub, and LinkedIn.
+- [x] **Dependency Management:** Installed `framer-motion` to support animations.
+- [x] **Icon Management:** Added `PhoneIcon` and `EnvelopeIcon` to `src/constants.tsx` and corrected all icon imports.
+- [x] **Integration:**
+    - [x] Refactored `src/components/UserSettings.tsx` to remove the old inline "About" section.
+    - [x] Added a new "About" button to the settings navigation.
+    - [x] Implemented state to toggle the visibility of the new `AboutScreen` as a modal overlay.
+- [x] **Bug Fix:** Implemented a `hashPin` method in `src/services/biometricService.ts` to resolve an integration error in `UserSettings.tsx`.
+
+## [2024-07-25] - Restore and Refactor User Settings (User Request)
+- [x] **Component Restoration:** Re-implemented the content for all settings sections (`Profile`, `Password`, `Preferences`, `Security`, `Data Management`) in `src/components/UserSettings.tsx`.
+- [x] **Code Organization:** Refactored each settings section into a dedicated sub-component for improved readability and maintenance.
+- [x] **Responsive Design:** Corrected the settings modal layout to ensure it is fully responsive and functions correctly on mobile devices.
+- [x] **Bug Fix:**
+    - [x] Added a loading state to `DangerousActionModal` by introducing an `isActionInProgress` prop.
+    - [x] Added null checks for the `user` object to prevent potential runtime errors.
+    - [x] Correctly passed the `isClearingData` state to the modal to enable the loading state during data deletion. 
+- [x] Refactor `UserSettings.tsx` to restore all sections and improve mobile responsiveness.
+- [x] Fix linter errors in `UserSettings.tsx`.
+
+## [2024-07-26] - Refactor Settings UI (User Request)
+- [x] Refactor all settings sections to open as individual full-screen modals, similar to the "About" screen.
+- [x] Create a generic `FullScreenSetting` component for consistent UI.
+- [x] Update `UserSettings.tsx` to manage the visibility of different setting screens.
+- [x] Add `ArrowLeftIcon` to `constants.tsx`.
+- [x] Restore all section components (`PasswordSection`, `PreferencesSection`, etc.) in `UserSettings.tsx`.
+
+## [2024-07-26] - Redesign Settings as Modals (User Request)
+- [x] Change settings sections to open as animated modals with a blurred background instead of full-screen views.
+- [x] Create a reusable `SettingsSectionModal` component with "scale-in" animation.
+- [x] Refactor `UserSettings.tsx` to use the new modal component.
+- [x] Remove the `FullScreenSetting` component and related logic.
