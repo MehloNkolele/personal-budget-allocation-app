@@ -13,6 +13,82 @@ import { ArrowRightIcon, CalculatorIcon, CalendarIcon, ChartPieIcon, LightBulbIc
 type Step = 'initial' | 'goal' | 'timeline' | 'result';
 type GoalMode = 'auto' | 'manual';
 
+// --- Helper Components (defined outside the main component to prevent re-rendering issues) ---
+
+const pageVariants = {
+    initial: { opacity: 0, x: 50 },
+    in: { opacity: 1, x: 0 },
+    out: { opacity: 0, x: -50 }
+};
+
+const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 100 } }
+};
+
+const MotionCard = ({ children, onClick, className = '' }: { children: React.ReactNode, onClick?: () => void, className?: string }) => (
+    <motion.div
+        onClick={onClick}
+        className={`bg-slate-800/50 p-6 rounded-2xl border border-slate-700 hover:border-sky-500 transition-colors duration-300 cursor-pointer ${className}`}
+        whileHover={{ y: -5, boxShadow: "0px 10px 20px rgba(0, 191, 255, 0.1)" }}
+    >
+        {children}
+    </motion.div>
+);
+
+const InputField = ({ label, value, onChange, placeholder, type = "number" }: { label: string, value: string, onChange: (e: React.ChangeEvent<HTMLInputElement>) => void, placeholder: string, type?: string }) => (
+    <motion.div variants={itemVariants}>
+        <label className="block text-sm font-medium text-slate-300 mb-1">{label}</label>
+        <input
+            type={type}
+            value={value}
+            onChange={onChange}
+            placeholder={placeholder}
+            className="w-full p-3 bg-slate-700/50 border border-slate-600 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none transition-all"
+        />
+    </motion.div>
+);
+
+const ResultItem = ({ label, value, className = '' }: { label: string, value: string | number, className?: string }) => (
+    <div className="flex justify-between items-center py-2">
+        <p className="text-slate-400">{label}</p>
+        <p className={`text-lg font-bold text-white ${className}`}>{value}</p>
+    </div>
+);
+
+const ResultRenderer: React.FC<{ result: SavingsGoalResult | TimelineResult | ManualGoalResult }> = ({ result }) => {
+    return (
+        <>
+            {('recommendedMonthlySaving' in result) && (
+                <>
+                    <ResultItem label="Recommended Monthly Saving" value={`R ${result.recommendedMonthlySaving.toFixed(2)}`} />
+                    <ResultItem label="Time to Goal" value={`${result.timeToGoalInMonths} Months`} />
+                    <ResultItem label="Savings % of Income" value={`${result.savingsPercentageOfIncome.toFixed(1)}%`} />
+                </>
+            )}
+            {('manualMonthlySaving' in result) && 'timeToGoalInMonths' in result && (
+                <>
+                    <ResultItem label="Time to Goal" value={`${result.timeToGoalInMonths} Months`} />
+                    <ResultItem label="Savings % of Income" value={`${result.savingsPercentageOfIncome.toFixed(1)}%`} />
+                </>
+            )}
+            {('requiredMonthlySaving' in result) && (
+                <>
+                    <ResultItem label="Required Monthly Saving" value={`R ${result.requiredMonthlySaving.toFixed(2)}`} />
+                    <ResultItem label="Feasibility" value={result.isFeasible ? 'Achievable' : 'Not Feasible'} className={result.isFeasible ? 'text-green-400' : 'text-red-400'} />
+                </>
+            )}
+            <div className="pt-4 border-t border-slate-700">
+                <h3 className="text-lg font-semibold text-sky-400 flex items-center gap-2 mb-2"><LightBulbIcon className="w-5 h-5" /> Advice</h3>
+                <p className="text-slate-300 italic">{result.advice}</p>
+                {('alternativeSuggestion' in result && result.alternativeSuggestion) && <p className="text-red-300 italic mt-2">{result.alternativeSuggestion}</p>}
+            </div>
+        </>
+    );
+};
+
+// --- Main Calculator Component ---
+
 const SavingsCalculator: React.FC = () => {
     const [step, setStep] = useState<Step>('initial');
     const [goalMode, setGoalMode] = useState<GoalMode>('auto');
@@ -33,6 +109,20 @@ const SavingsCalculator: React.FC = () => {
         if (!frame || isNaN(frame) || frame <= 0) return 0;
         return timeframeUnit === 'years' ? frame * 12 : frame;
     }, [timeframe, timeframeUnit]);
+
+    const handleGoBackToEdit = () => {
+        if (!result) return;
+
+        // Determine which form was used based on properties in the result object
+        if ('recommendedMonthlySaving' in result || ('manualMonthlySaving' in result && 'timeToGoalInMonths' in result)) {
+            setStep('goal');
+        } else if ('requiredMonthlySaving' in result) {
+            setStep('timeline');
+        }
+        
+        setResult(null);
+        setError(null);
+    };
 
     const handleCalculate = () => {
         const income = parseFloat(monthlyIncome);
@@ -85,40 +175,6 @@ const SavingsCalculator: React.FC = () => {
         setError(null);
     };
 
-    const MotionCard = ({ children, onClick, className = '' }: { children: React.ReactNode, onClick?: () => void, className?: string }) => (
-        <motion.div
-            onClick={onClick}
-            className={`bg-slate-800/50 p-6 rounded-2xl border border-slate-700 hover:border-sky-500 transition-colors duration-300 cursor-pointer ${className}`}
-            whileHover={{ y: -5, boxShadow: "0px 10px 20px rgba(0, 191, 255, 0.1)" }}
-        >
-            {children}
-        </motion.div>
-    );
-
-    const InputField = ({ label, value, onChange, placeholder, type = "number" }: any) => (
-         <motion.div variants={itemVariants}>
-            <label className="block text-sm font-medium text-slate-300 mb-1">{label}</label>
-            <input 
-                type={type}
-                value={value} 
-                onChange={onChange} 
-                placeholder={placeholder} 
-                className="w-full p-3 bg-slate-700/50 border border-slate-600 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none transition-all"
-            />
-        </motion.div>
-    );
-    
-    const pageVariants = {
-        initial: { opacity: 0, x: 50 },
-        in: { opacity: 1, x: 0 },
-        out: { opacity: 0, x: -50 }
-    };
-    
-    const itemVariants = {
-      hidden: { opacity: 0, y: 20 },
-      visible: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 100 } }
-    };
-
     return (
         <div className="w-full min-h-screen bg-slate-900 text-white flex flex-col items-center justify-center font-sans p-4">
             <div className="w-full max-w-md">
@@ -155,8 +211,8 @@ const SavingsCalculator: React.FC = () => {
                             <button onClick={() => setStep('initial')} className="text-slate-400 hover:text-white mb-4">&larr; Back</button>
                             <h1 className="text-3xl font-bold mb-6">{step === 'goal' ? 'Goal Calculator' : 'Timeline Calculator'}</h1>
                             <div className="space-y-4">
-                                <InputField label="Monthly Income (R)" value={monthlyIncome} onChange={(e: any) => setMonthlyIncome(e.target.value)} placeholder="e.g., 25000" />
-                                <InputField label="Savings Goal (R)" value={savingsGoal} onChange={(e: any) => setSavingsGoal(e.target.value)} placeholder="e.g., 100000" />
+                                <InputField label="Monthly Income (R)" value={monthlyIncome} onChange={(e) => setMonthlyIncome(e.target.value)} placeholder="e.g., 25000" />
+                                <InputField label="Savings Goal (R)" value={savingsGoal} onChange={(e) => setSavingsGoal(e.target.value)} placeholder="e.g., 100000" />
                                 
                                 {step === 'goal' && (
                                     <>
@@ -167,7 +223,7 @@ const SavingsCalculator: React.FC = () => {
                                         <AnimatePresence>
                                         {goalMode === 'manual' && (
                                             <motion.div initial={{opacity: 0}} animate={{opacity: 1}} exit={{opacity: 0}}>
-                                                <InputField label="Monthly Saving Amount (R)" value={manualMonthlySaving} onChange={(e: any) => setManualMonthlySaving(e.target.value)} placeholder="e.g., 4000" />
+                                                <InputField label="Monthly Saving Amount (R)" value={manualMonthlySaving} onChange={(e) => setManualMonthlySaving(e.target.value)} placeholder="e.g., 4000" />
                                             </motion.div>
                                         )}
                                         </AnimatePresence>
@@ -177,7 +233,7 @@ const SavingsCalculator: React.FC = () => {
                                 {step === 'timeline' && (
                                      <motion.div variants={itemVariants} className="grid grid-cols-3 gap-2">
                                         <div className="col-span-2">
-                                          <InputField label="Desired Timeframe" value={timeframe} onChange={(e: any) => setTimeframe(e.target.value)} placeholder="e.g., 12" />
+                                          <InputField label="Desired Timeframe" value={timeframe} onChange={(e) => setTimeframe(e.target.value)} placeholder="e.g., 12" />
                                         </div>
                                         <div className="self-end">
                                             <select value={timeframeUnit} onChange={(e) => setTimeframeUnit(e.target.value as 'months' | 'years')} className="w-full p-3 bg-slate-700/50 border border-slate-600 rounded-lg h-full">
@@ -198,12 +254,27 @@ const SavingsCalculator: React.FC = () => {
                     )}
 
                     {step === 'result' && result && (
-                         <motion.div key="result" initial="initial" animate="in" exit="out" variants={pageVariants} transition={{ duration: 0.3 }} className="w-full">
+                        <motion.div key="result" initial="initial" animate="in" exit="out" variants={pageVariants} transition={{ duration: 0.3 }} className="w-full">
                             <h1 className="text-3xl font-bold text-center mb-4">Your Savings Plan</h1>
                             <div className="bg-slate-800/50 p-6 rounded-2xl border border-slate-700 space-y-4">
                                 <ResultRenderer result={result} />
                             </div>
-                            <button onClick={resetCalculator} className="w-full mt-6 bg-slate-700 text-white font-bold py-3 px-4 rounded-lg hover:bg-slate-600 transition-colors">Start Over</button>
+                            <div className="w-full mt-6 flex flex-col sm:flex-row gap-4">
+                                <motion.button 
+                                    onClick={handleGoBackToEdit} 
+                                    className="w-full bg-sky-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-sky-700 transition-colors flex-1"
+                                    whileHover={{ y: -2 }}
+                                >
+                                    Make Changes
+                                </motion.button>
+                                <motion.button 
+                                    onClick={resetCalculator} 
+                                    className="w-full bg-slate-700 text-white font-semibold py-3 px-4 rounded-lg hover:bg-slate-600 transition-colors sm:w-auto"
+                                    whileHover={{ y: -2 }}
+                                >
+                                    Start Over
+                                </motion.button>
+                            </div>
                         </motion.div>
                     )}
                 </AnimatePresence>
@@ -211,43 +282,5 @@ const SavingsCalculator: React.FC = () => {
         </div>
     );
 };
-
-const ResultRenderer: React.FC<{ result: SavingsGoalResult | TimelineResult | ManualGoalResult }> = ({ result }) => {
-    return (
-        <>
-            {('recommendedMonthlySaving' in result) && (
-                <>
-                    <ResultItem label="Recommended Monthly Saving" value={`R ${result.recommendedMonthlySaving.toFixed(2)}`} />
-                    <ResultItem label="Time to Goal" value={`${result.timeToGoalInMonths} Months`} />
-                    <ResultItem label="Savings % of Income" value={`${result.savingsPercentageOfIncome.toFixed(1)}%`} />
-                </>
-            )}
-            {('manualMonthlySaving' in result) && 'timeToGoalInMonths' in result && (
-                <>
-                    <ResultItem label="Time to Goal" value={`${result.timeToGoalInMonths} Months`} />
-                    <ResultItem label="Savings % of Income" value={`${result.savingsPercentageOfIncome.toFixed(1)}%`} />
-                </>
-            )}
-            {('requiredMonthlySaving' in result) && (
-                <>
-                    <ResultItem label="Required Monthly Saving" value={`R ${result.requiredMonthlySaving.toFixed(2)}`} />
-                    <ResultItem label="Feasibility" value={result.isFeasible ? 'Achievable' : 'Not Feasible'} className={result.isFeasible ? 'text-green-400' : 'text-red-400'} />
-                </>
-            )}
-            <div className="pt-4 border-t border-slate-700">
-                <h3 className="text-lg font-semibold text-sky-400 flex items-center gap-2 mb-2"><LightBulbIcon className="w-5 h-5"/> Advice</h3>
-                <p className="text-slate-300 italic">{result.advice}</p>
-                {('alternativeSuggestion' in result && result.alternativeSuggestion) && <p className="text-red-300 italic mt-2">{result.alternativeSuggestion}</p>}
-            </div>
-        </>
-    );
-};
-
-const ResultItem = ({ label, value, className = '' }: {label: string, value: string | number, className?: string}) => (
-    <div className="flex justify-between items-center py-2">
-        <p className="text-slate-400">{label}</p>
-        <p className={`text-lg font-bold text-white ${className}`}>{value}</p>
-    </div>
-);
 
 export default SavingsCalculator;

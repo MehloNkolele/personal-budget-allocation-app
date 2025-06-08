@@ -78,3 +78,14 @@ This document outlines the development plan for the Personal Budget Allocation A
 - [x] Create a reusable `SettingsSectionModal` component with "scale-in" animation.
 - [x] Refactor `UserSettings.tsx` to use the new modal component.
 - [x] Remove the `FullScreenSetting` component and related logic.
+
+## [2024-07-26] - Redesign Savings Calculator (User Request)
+- [x] Redesign `SavingsCalculator` for a mobile-first, step-by-step user experience.
+- [x] Implement `framer-motion` for smooth transitions between steps.
+- [x] Add missing icons to `constants.tsx`.
+- [x] Fix type errors in result rendering.
+- [x] Fix input focus issue by refactoring helper components.
+
+## [2024-07-26] - Improve Calculator UX (User Request)
+- [x] Replace "Start Over" button with "Make Changes" to allow editing inputs without a full reset.
+- [x] Keep "Start Over" as a secondary option on the results screen.
