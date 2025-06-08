@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { Category, Subcategory, Transaction, ModalType, CategoryFormPropsNew, CategoryFormPropsEdit, SubcategoryFormPropsNew, SubcategoryFormPropsEdit, MonthlyBudget } from './types';
+import { Category, Subcategory, Transaction, ModalType, CategoryFormProps, SubcategoryFormProps, MonthlyBudget } from './types';
 import Dashboard from './components/Dashboard';
 import CategoryManager from './components/CategoryManager';
 import Reports from './components/Reports';
@@ -53,13 +53,13 @@ const AppContent: React.FC = () => {
         if (migrationSuccessful) addToast('Your existing data has been migrated to your personal account!', 'success');
         
         const userData = UserDataManager.loadUserData(user.uid);
-        setTotalIncome(userData.totalIncome);
-        setCategories(userData.categories);
-        setTransactions(userData.transactions);
-        setSelectedCurrency(userData.selectedCurrency);
-        setAreGlobalAmountsHidden(userData.areGlobalAmountsHidden);
-        setIsIncomeHidden(userData.isIncomeHidden);
-        setMonthlyBudgets(userData.monthlyBudgets);
+        setTotalIncome(userData.totalIncome || 0);
+        setCategories(userData.categories || []);
+        setTransactions(userData.transactions || []);
+        setSelectedCurrency(userData.selectedCurrency || CURRENCIES[0].code);
+        setAreGlobalAmountsHidden(userData.areGlobalAmountsHidden || false);
+        setIsIncomeHidden(userData.isIncomeHidden === undefined ? true : userData.isIncomeHidden);
+        setMonthlyBudgets(userData.monthlyBudgets || []);
         setIsDataLoaded(true);
       } catch (error) {
         console.error("Error loading user data:", error);
@@ -91,7 +91,7 @@ const AppContent: React.FC = () => {
   const formatCurrency = useCallback((amount: number, isIndividualItemHidden?: boolean): string => {
     if (areGlobalAmountsHidden || isIndividualItemHidden) return '••••';
     try {
-      return amount.toLocaleString(undefined, { style: 'currency', currency: selectedCurrency, minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      return new Intl.NumberFormat(undefined, { style: 'currency', currency: selectedCurrency, minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(amount);
     } catch (error) {
       console.warn(`Currency formatting error for ${selectedCurrency}. Falling back.`, error);
       return `${selectedCurrency} ${amount.toFixed(2)}`;
@@ -173,14 +173,40 @@ const AppContent: React.FC = () => {
     addToast(`Budget from ${budget.month} has been restored.`, 'success');
   }, [addToast]);
 
-  const getParentCategoryNameForModal = () => (modalState?.type === 'addSubcategory' || modalState?.type === 'editSubcategory' ? categories.find(c => c.id === modalState.parentCategoryId)?.name || 'Unknown' : '');
-  
   const totalAllocated = useMemo(() => categories.reduce((sum, cat) => sum + cat.allocatedAmount, 0), [categories]);
   const unallocatedAmount = useMemo(() => totalIncome - totalAllocated, [totalIncome, totalAllocated]);
 
+  const getModalTitle = (): string => {
+    if (!modalState) return '';
+    switch (modalState.type) {
+      case 'addCategory': return 'Add New Category';
+      case 'editCategory': return `Edit ${modalState.category.name}`;
+      case 'addSubcategory':
+        const parentAdd = categories.find(c => c.id === modalState.parentCategoryId);
+        return `Add to ${parentAdd?.name || 'Category'}`;
+      case 'editSubcategory':
+        const parentEdit = categories.find(c => c.id === modalState.parentCategoryId);
+        return `Edit ${modalState.subcategory.name} in ${parentEdit?.name || 'Category'}`;
+      default: return '';
+    }
+  };
+
   const renderCurrentSection = () => {
     switch (currentSection) {
-      case 'categories': return <CategoryManager categories={categories} onAddCategory={() => openModal({ type: 'addCategory' })} onEditCategory={(cat) => openModal({ type: 'editCategory', category: cat })} onDeleteCategory={deleteCategory} onAddSubcategory={(parentId) => openModal({ type: 'addSubcategory', parentCategoryId: parentId })} onEditSubcategory={(cat, sub) => openModal({ type: 'editSubcategory', parentCategoryId: cat.id, subcategory: sub })} onDeleteSubcategory={deleteSubcategory} onToggleComplete={toggleSubcategoryComplete} onToggleCategoryAmountHidden={toggleCategoryAmountHidden} selectedCurrency={selectedCurrency} areGlobalAmountsHidden={areGlobalAmountsHidden} />;
+      case 'categories': 
+        return <CategoryManager 
+          categories={categories} 
+          onAddCategory={() => openModal({ type: 'addCategory' })} 
+          onEditCategory={(cat) => openModal({ type: 'editCategory', category: cat })} 
+          onDeleteCategory={deleteCategory} 
+          onAddSubcategory={(parentId) => openModal({ type: 'addSubcategory', parentCategoryId: parentId })} 
+          onEditSubcategory={(parentCategoryId, sub) => openModal({ type: 'editSubcategory', parentCategoryId, subcategory: sub })} 
+          onDeleteSubcategory={deleteSubcategory} 
+          onToggleSubcategoryComplete={toggleSubcategoryComplete} 
+          onToggleCategoryAmountHidden={toggleCategoryAmountHidden} 
+          formatCurrency={formatCurrency} 
+          areGlobalAmountsHidden={areGlobalAmountsHidden} 
+        />;
       case 'reports': return <Reports categories={categories} transactions={transactions} totalIncome={totalIncome} formatCurrency={formatCurrency} selectedCurrency={selectedCurrency} />;
       case 'planning': return <BudgetPlanning monthlyBudgets={monthlyBudgets} onMonthlyBudgetsChange={setMonthlyBudgets} currentCategories={categories} currentIncome={totalIncome} formatCurrency={formatCurrency} selectedCurrency={selectedCurrency} userId={user?.uid || ''} />;
       case 'history': return <BudgetHistory monthlyBudgets={monthlyBudgets} allTransactions={transactions} formatCurrency={formatCurrency} selectedCurrency={selectedCurrency} />;
@@ -190,11 +216,11 @@ const AppContent: React.FC = () => {
   };
 
   const categoryFormProps = useMemo((): CategoryFormProps | null => {
-    if (modalState?.type === 'addCategory') return { onSubmit: addCategory, onClose: closeModal, maxAllocatableAmount: unallocatedAmount, selectedCurrency };
+    if (modalState?.type === 'addCategory') return { onSubmit: (name: string, amount: number) => addCategory(name, amount), onClose: closeModal, maxAllocatableAmount: unallocatedAmount, selectedCurrency };
     if (modalState?.type === 'editCategory') {
       const { category } = modalState;
       const allocatedToOther = totalAllocated - category.allocatedAmount;
-      return { onSubmit: (name, amount) => editCategory(category.id, name, amount), onClose: closeModal, existingCategory: category, maxAllocatableAmount: totalIncome - allocatedToOther, minAllocatableAmountForEdit: category.subcategories.reduce((s,c) => s + c.allocatedAmount, 0), selectedCurrency };
+      return { onSubmit: (name: string, amount: number) => editCategory(category.id, name, amount), onClose: closeModal, existingCategory: category, maxAllocatableAmount: totalIncome - allocatedToOther, minAllocatableAmountForEdit: category.subcategories.reduce((s,c) => s + c.allocatedAmount, 0), selectedCurrency };
     }
     return null;
   }, [modalState, addCategory, closeModal, unallocatedAmount, selectedCurrency, totalAllocated, totalIncome, editCategory]);
@@ -205,8 +231,8 @@ const AppContent: React.FC = () => {
       if (!parent) return null;
       const allocatedToOtherSubs = parent.subcategories.filter(s => modalState.type !== 'editSubcategory' || s.id !== modalState.subcategory.id).reduce((sum, s) => sum + s.allocatedAmount, 0);
       const maxAllocatable = parent.allocatedAmount - allocatedToOtherSubs;
-      if (modalState.type === 'addSubcategory') return { onSubmit: (name, amount) => addSubcategory(parent.id, name, amount), onClose: closeModal, parentCategoryName: parent.name, maxAllocatableAmount: maxAllocatable, selectedCurrency };
-      return { onSubmit: (name, amount) => editSubcategory(parent.id, modalState.subcategory.id, name, amount), onClose: closeModal, existingSubcategory: modalState.subcategory, parentCategoryName: parent.name, maxAllocatableAmount: maxAllocatable, selectedCurrency };
+      if (modalState.type === 'addSubcategory') return { onSubmit: (name: string, amount: number) => addSubcategory(parent.id, name, amount), onClose: closeModal, parentCategoryName: parent.name, maxAllocatableAmount: maxAllocatable, selectedCurrency };
+      return { onSubmit: (name: string, amount: number) => editSubcategory(parent.id, modalState.subcategory.id, name, amount), onClose: closeModal, existingSubcategory: modalState.subcategory, parentCategoryName: parent.name, maxAllocatableAmount: maxAllocatable, selectedCurrency };
     }
     return null;
   }, [modalState, categories, addSubcategory, editSubcategory, closeModal, selectedCurrency]);
@@ -218,12 +244,32 @@ const AppContent: React.FC = () => {
         {renderCurrentSection()}
       </main>
       <Toaster />
-      <Modal isVisible={!!modalState} onClose={closeModal}>
+
+      <Modal isOpen={!!modalState && (modalState.type === 'addCategory' || modalState.type === 'editCategory' || modalState.type === 'addSubcategory' || modalState.type === 'editSubcategory')} onClose={closeModal} title={getModalTitle()}>
         {(modalState?.type === 'addCategory' || modalState?.type === 'editCategory') && categoryFormProps && <CategoryForm {...categoryFormProps} />}
         {(modalState?.type === 'addSubcategory' || modalState?.type === 'editSubcategory') && subcategoryFormProps && <SubcategoryForm {...subcategoryFormProps} />}
-        {modalState?.type === 'deleteCategory' && <ConfirmationModal title="Delete Category" message={`Are you sure you want to delete "${modalState.category.name}"?`} onConfirm={() => confirmDeleteCategory(modalState.category.id)} onCancel={closeModal} />}
-        {modalState?.type === 'deleteSubcategory' && <ConfirmationModal title="Delete Subcategory" message={`Are you sure you want to delete "${modalState.subcategory.name}" from "${modalState.parentCategoryName}"?`} onConfirm={() => confirmDeleteSubcategory(modalState.parentCategoryId, modalState.subcategory.id)} onCancel={closeModal} />}
       </Modal>
+
+      {modalState?.type === 'deleteCategory' && 
+        <ConfirmationModal 
+          isOpen={true}
+          onClose={closeModal}
+          onConfirm={() => confirmDeleteCategory(modalState.category.id)}
+          title="Delete Category"
+          message={`Are you sure you want to delete "${modalState.category.name}"? This action cannot be undone.`}
+          isDangerous={true}
+        />
+      }
+      {modalState?.type === 'deleteSubcategory' && 
+        <ConfirmationModal 
+          isOpen={true}
+          onClose={closeModal}
+          onConfirm={() => confirmDeleteSubcategory(modalState.parentCategoryId, modalState.subcategory.id)}
+          title="Delete Subcategory"
+          message={`Are you sure you want to delete "${modalState.subcategory.name}" from "${modalState.parentCategoryName}"?`}
+          isDangerous={true}
+        />
+      }
     </div>
   );
 };
