@@ -11,11 +11,25 @@ import { User } from '../types';
 import ConfirmationModal from './ConfirmationModal';
 import UserSettings from './UserSettings';
 
-interface UserDropdownProps {
-  user: User;
+interface NavItem {
+  id: string;
+  label: string;
+  icon: React.ComponentType<{ className?: string }>;
 }
 
-const UserDropdown: React.FC<UserDropdownProps> = ({ user }) => {
+interface UserDropdownProps {
+  user: User;
+  navItems?: NavItem[];
+  currentSection?: string;
+  onSectionChange?: (section: string) => void;
+}
+
+const UserDropdown: React.FC<UserDropdownProps> = ({ 
+  user,
+  navItems = [],
+  currentSection,
+  onSectionChange,
+}) => {
   const { signOut } = useAuth();
   const { addToast, clearAllToasts } = useToast();
   const [isOpen, setIsOpen] = useState(false);
@@ -56,6 +70,13 @@ const UserDropdown: React.FC<UserDropdownProps> = ({ user }) => {
     setShowUserSettings(true);
     setIsOpen(false);
   };
+
+  const handleSectionClick = (sectionId: string) => {
+    if (onSectionChange) {
+      onSectionChange(sectionId);
+    }
+    setIsOpen(false);
+  }
 
   const openSignOutModal = () => {
     setShowSignOutModal(true);
@@ -110,54 +131,79 @@ const UserDropdown: React.FC<UserDropdownProps> = ({ user }) => {
 
         {/* Dropdown Menu */}
         {isOpen && (
-          <div className="absolute right-0 mt-2 w-64 bg-slate-800 rounded-lg shadow-xl border border-slate-700/50 py-2 z-50">
-            {/* User Info Header */}
-            <div className="px-4 py-3 border-b border-slate-700/50">
-              <div className="flex items-center space-x-3">
-                {user.photoURL ? (
-                  <img
-                    src={user.photoURL}
-                    alt="Profile"
-                    className="w-10 h-10 rounded-full"
-                  />
-                ) : (
-                  <div className="w-10 h-10 bg-gradient-to-br from-sky-500 to-sky-600 rounded-full flex items-center justify-center">
-                    <span className="text-white font-semibold">
-                      {user.displayName?.charAt(0) || user.email?.charAt(0) || 'U'}
-                    </span>
+          <div className="absolute right-0 mt-2 w-72 origin-top-right bg-slate-800 rounded-lg shadow-xl border border-slate-700/50 z-50 overflow-hidden">
+            <div className="max-h-[80vh] overflow-y-auto">
+              {/* User Info Header */}
+              <div className="px-4 py-3 border-b border-slate-700/50">
+                <div className="flex items-center space-x-3">
+                  {user.photoURL ? (
+                    <img
+                      src={user.photoURL}
+                      alt="Profile"
+                      className="w-10 h-10 rounded-full"
+                    />
+                  ) : (
+                    <div className="w-10 h-10 bg-gradient-to-br from-sky-500 to-sky-600 rounded-full flex items-center justify-center">
+                      <span className="text-white font-semibold">
+                        {user.displayName?.charAt(0) || user.email?.charAt(0) || 'U'}
+                      </span>
+                    </div>
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-white font-medium text-sm truncate">
+                      {user.displayName || 'User'}
+                    </p>
+                    <p className="text-slate-400 text-xs truncate">
+                      {user.email}
+                    </p>
                   </div>
-                )}
-                <div className="flex-1 min-w-0">
-                  <p className="text-white font-medium text-sm truncate">
-                    {user.displayName || 'User'}
-                  </p>
-                  <p className="text-slate-400 text-xs truncate">
-                    {user.email}
-                  </p>
                 </div>
               </div>
-            </div>
 
-            {/* Menu Items */}
-            <div className="py-1">
-              <button
-                onClick={openSettings}
-                className="w-full flex items-center space-x-3 px-4 py-2 text-sm text-slate-300 hover:text-white hover:bg-slate-700/50 transition-colors duration-200"
-              >
-                <CogIcon className="w-4 h-4" />
-                <span>Account Settings</span>
-              </button>
+              {/* Navigation Items (Mobile Only) */}
+              <div className="py-2 lg:hidden">
+                <p className="px-4 py-1 text-xs font-semibold text-slate-500 uppercase tracking-wider">Navigation</p>
+                {navItems.map(item => {
+                  const Icon = item.icon;
+                  const isActive = currentSection === item.id;
+                  return (
+                    <button
+                      key={item.id}
+                      onClick={() => handleSectionClick(item.id)}
+                      className={`w-full flex items-center space-x-3 px-4 py-2.5 text-sm transition-colors duration-200 ${
+                        isActive 
+                          ? 'text-sky-400 bg-sky-500/10' 
+                          : 'text-slate-300 hover:text-white hover:bg-slate-700/50'
+                      }`}
+                    >
+                      <Icon className={`w-5 h-5 ${isActive ? 'text-sky-400' : 'text-slate-400'}`} />
+                      <span className="font-medium">{item.label}</span>
+                      {isActive && <div className="ml-auto w-2 h-2 rounded-full bg-sky-400"></div>}
+                    </button>
+                  );
+                })}
+              </div>
 
-              <div className="border-t border-slate-700/50 my-1"></div>
+              {/* Menu Items */}
+              <div className="py-2 border-t border-slate-700/50">
+              <p className="px-4 py-1 text-xs font-semibold text-slate-500 uppercase tracking-wider">Account</p>
+                <button
+                  onClick={openSettings}
+                  className="w-full flex items-center space-x-3 px-4 py-2 text-sm text-slate-300 hover:text-white hover:bg-slate-700/50 transition-colors duration-200"
+                >
+                  <CogIcon className="w-5 h-5 text-slate-400" />
+                  <span>Account Settings</span>
+                </button>
 
-              <button
-                onClick={openSignOutModal}
-                disabled={isSigningOut}
-                className="w-full flex items-center space-x-3 px-4 py-2 text-sm text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <ArrowRightOnRectangleIcon className="w-4 h-4" />
-                <span>{isSigningOut ? 'Signing Out...' : 'Sign Out'}</span>
-              </button>
+                <button
+                  onClick={openSignOutModal}
+                  disabled={isSigningOut}
+                  className="w-full flex items-center space-x-3 px-4 py-2 text-sm text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <ArrowRightOnRectangleIcon className="w-5 h-5" />
+                  <span>{isSigningOut ? 'Signing Out...' : 'Sign Out'}</span>
+                </button>
+              </div>
             </div>
           </div>
         )}

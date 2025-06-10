@@ -1,17 +1,94 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import {
-    calculateSavingsGoal,
-    calculateTimelineGoal,
-    calculateManualGoal,
-    SavingsGoalResult,
-    TimelineResult,
-    ManualGoalResult,
-} from '../utils/savingsCalculator';
-import { ArrowRightIcon, CalculatorIcon, CalendarIcon, ChartPieIcon, LightBulbIcon, SparklesIcon, XMarkIcon } from '../constants';
+import { ArrowRightIcon, CalendarIcon, ChartPieIcon } from '../constants';
 
 type Step = 'initial' | 'goal' | 'timeline' | 'result';
 type GoalMode = 'auto' | 'manual';
+
+// --- Type Definitions ---
+export interface SavingsGoalInput {
+  monthlyIncome: number;
+  savingsGoal: number;
+}
+
+export interface TimelineGoalInput {
+  monthlyIncome: number;
+  savingsGoal: number;
+  timeframe: number; // in months
+}
+
+export interface ManualGoalInput {
+  monthlyIncome: number;
+  savingsGoal: number;
+  manualMonthlySaving: number;
+}
+
+export interface SavingsGoalResult {
+  recommendedMonthlySaving: number;
+  timeToGoalInMonths: number;
+  savingsPercentageOfIncome: number;
+}
+
+export interface TimelineResult {
+  requiredMonthlySaving: number;
+  isFeasible: boolean;
+}
+
+export interface ManualGoalResult {
+  manualMonthlySaving: number;
+  timeToGoalInMonths: number;
+  savingsPercentageOfIncome: number;
+}
+
+export interface CalculationError {
+  error: string;
+}
+
+// --- Calculation Logic ---
+const calculateSavingsGoal = (input: SavingsGoalInput): SavingsGoalResult | CalculationError => {
+  const { monthlyIncome, savingsGoal } = input;
+  if (monthlyIncome <= 0 || savingsGoal <= 0) {
+    return { error: "Income and savings goal must be positive numbers." };
+  }
+  const recommendedPercentage = 0.20; // 20% savings rate
+  const recommendedMonthlySaving = monthlyIncome * recommendedPercentage;
+  const timeToGoalInMonths = Math.ceil(savingsGoal / recommendedMonthlySaving);
+
+  return {
+    recommendedMonthlySaving,
+    timeToGoalInMonths,
+    savingsPercentageOfIncome: recommendedPercentage * 100
+  };
+};
+
+const calculateTimelineGoal = (input: TimelineGoalInput): TimelineResult | CalculationError => {
+  const { monthlyIncome, savingsGoal, timeframe } = input;
+  if (monthlyIncome <= 0 || savingsGoal <= 0 || timeframe <= 0) {
+    return { error: "Income, goal, and timeframe must be positive." };
+  }
+  const requiredMonthlySaving = savingsGoal / timeframe;
+  const isFeasible = requiredMonthlySaving <= monthlyIncome;
+
+  return { requiredMonthlySaving, isFeasible };
+};
+
+const calculateManualGoal = (input: ManualGoalInput): ManualGoalResult | CalculationError => {
+  const { monthlyIncome, savingsGoal, manualMonthlySaving } = input;
+  if (monthlyIncome <= 0 || savingsGoal <= 0 || manualMonthlySaving <= 0) {
+    return { error: "All input values must be positive." };
+  }
+  if (manualMonthlySaving > monthlyIncome) {
+    return { error: "Monthly saving cannot exceed monthly income." };
+  }
+  const timeToGoalInMonths = Math.ceil(savingsGoal / manualMonthlySaving);
+  const savingsPercentageOfIncome = (manualMonthlySaving / monthlyIncome) * 100;
+
+  return {
+    manualMonthlySaving,
+    timeToGoalInMonths,
+    savingsPercentageOfIncome
+  };
+};
 
 // --- Helper Components (defined outside the main component to prevent re-rendering issues) ---
 
@@ -78,11 +155,6 @@ const ResultRenderer: React.FC<{ result: SavingsGoalResult | TimelineResult | Ma
                     <ResultItem label="Feasibility" value={result.isFeasible ? 'Achievable' : 'Not Feasible'} className={result.isFeasible ? 'text-green-400' : 'text-red-400'} />
                 </>
             )}
-            <div className="pt-4 border-t border-slate-700">
-                <h3 className="text-lg font-semibold text-sky-400 flex items-center gap-2 mb-2"><LightBulbIcon className="w-5 h-5" /> Advice</h3>
-                <p className="text-slate-300 italic">{result.advice}</p>
-                {('alternativeSuggestion' in result && result.alternativeSuggestion) && <p className="text-red-300 italic mt-2">{result.alternativeSuggestion}</p>}
-            </div>
         </>
     );
 };

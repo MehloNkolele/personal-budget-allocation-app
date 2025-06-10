@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { motion } from 'framer-motion';
 import { Category, Transaction, ReportDateRange, CategorySpendingData } from '../types';
 import {
   ChartBarIcon,
@@ -62,6 +63,8 @@ const Reports: React.FC<ReportsProps> = ({
 }) => {
   const [selectedPeriod, setSelectedPeriod] = useState<'week' | 'month' | 'quarter' | 'year'>('month');
   const [selectedReportType, setSelectedReportType] = useState<'overview' | 'categories' | 'trends' | 'insights'>('overview');
+
+  const reportTypes = ['overview', 'categories', 'trends', 'insights'];
 
   // Calculate date range based on selected period
   const dateRange = useMemo((): ReportDateRange => {
@@ -727,67 +730,63 @@ const Reports: React.FC<ReportsProps> = ({
   };
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h2 className="text-2xl font-semibold text-sky-400">Financial Reports</h2>
-          <p className="text-slate-400 mt-1">
-            Analyze your spending patterns and track your financial progress
-          </p>
+    <div className="w-full space-y-6">
+      <div className="bg-slate-800/50 p-4 rounded-2xl border border-slate-700">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div>
+            <h1 className="text-2xl font-bold text-white">Financial Reports</h1>
+            <p className="text-slate-400 mt-1">Analyze spending patterns and track your financial progress.</p>
+          </div>
+          <div className="flex items-center gap-2">
+            <select
+              value={selectedPeriod}
+              onChange={(e) => setSelectedPeriod(e.target.value as any)}
+              className="bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-sm text-white focus:ring-sky-500 focus:border-sky-500"
+            >
+              <option value="week">Last 7 Days</option>
+              <option value="month">Last Month</option>
+              <option value="quarter">Last Quarter</option>
+              <option value="year">Last Year</option>
+            </select>
+            <button 
+              onClick={exportToCSV}
+              className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-4 py-2 rounded-lg transition-colors"
+            >
+              <DocumentArrowDownIcon className="w-5 h-5" />
+              <span>Export CSV</span>
+            </button>
+          </div>
         </div>
-        
-        <div className="flex flex-col sm:flex-row gap-3">
-          {/* Period Selector */}
-          <select
-            value={selectedPeriod}
-            onChange={(e) => setSelectedPeriod(e.target.value as any)}
-            className="bg-slate-700 border border-slate-600 text-slate-200 px-3 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"
-          >
-            <option value="week">Last Week</option>
-            <option value="month">Last Month</option>
-            <option value="quarter">Last Quarter</option>
-            <option value="year">Last Year</option>
-          </select>
-
-          {/* Export Button */}
-          <button
-            onClick={exportToCSV}
-            className="flex items-center space-x-2 bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg transition-colors duration-200"
-          >
-            <DocumentArrowDownIcon className="w-4 h-4" />
-            <span>Export CSV</span>
-          </button>
+        <div className="mt-6">
+          <div className="relative flex space-x-2 bg-slate-700/50 p-1 rounded-full">
+            {reportTypes.map(type => (
+              <button
+                key={type}
+                onClick={() => setSelectedReportType(type as any)}
+                className={`relative capitalize flex-1 py-2 text-sm font-semibold rounded-full transition-colors focus:outline-none ${
+                  selectedReportType === type ? 'text-white' : 'text-slate-300 hover:bg-slate-600/50'
+                }`}
+              >
+                {selectedReportType === type && (
+                  <motion.div
+                    layoutId="report-tab"
+                    className="absolute inset-0 bg-sky-600 rounded-full"
+                    transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                  />
+                )}
+                <span className="relative z-10">{type}</span>
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
-      {/* Report Type Tabs */}
-      <div className="flex flex-wrap gap-2">
-        {[
-          { id: 'overview', label: 'Overview' },
-          { id: 'categories', label: 'Categories' },
-          { id: 'trends', label: 'Trends' },
-          { id: 'insights', label: 'Insights' }
-        ].map(tab => (
-          <button
-            key={tab.id}
-            onClick={() => setSelectedReportType(tab.id as any)}
-            className={`px-4 py-2 rounded-lg font-medium transition-colors duration-200 ${
-              selectedReportType === tab.id
-                ? 'bg-sky-600 text-white'
-                : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
-            }`}
-          >
-            {tab.label}
-          </button>
-        ))}
+      <div>
+        {selectedReportType === 'overview' && renderOverview()}
+        {selectedReportType === 'categories' && renderCategories()}
+        {selectedReportType === 'trends' && renderTrends()}
+        {selectedReportType === 'insights' && renderInsights()}
       </div>
-
-      {/* Report Content */}
-      {selectedReportType === 'overview' && renderOverview()}
-      {selectedReportType === 'categories' && renderCategories()}
-      {selectedReportType === 'trends' && renderTrends()}
-      {selectedReportType === 'insights' && renderInsights()}
     </div>
   );
 };

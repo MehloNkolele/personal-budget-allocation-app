@@ -1,36 +1,57 @@
 import React, { useState, useMemo } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { MonthlyBudget, BudgetTemplate, Category } from '../types';
 import { UserDataManager } from '../utils/userDataManager';
 import MonthlyBudgetView from './MonthlyBudgetView';
 import BudgetTemplateManager from './BudgetTemplateManager';
+import BudgetOverview from './BudgetOverview';
 import {
   CalendarIcon,
   PlusIcon,
   DocumentDuplicateIcon,
   TrashIcon,
   EyeIcon,
-  CogIcon
+  CogIcon,
+  ChevronDownIcon
 } from '../constants';
 
 interface BudgetPlanningProps {
   monthlyBudgets: MonthlyBudget[];
   onMonthlyBudgetsChange: (budgets: MonthlyBudget[]) => void;
   currentCategories: Category[];
-  currentIncome: number;
   formatCurrency: (amount: number) => string;
   selectedCurrency: string;
   userId: string;
+  totalIncome: number;
+  onTotalIncomeChange: (income: number) => void;
+  totalAllocated: number;
+  unallocatedAmount: number;
+  onCurrencyChange: (currencyCode: string) => void;
+  areGlobalAmountsHidden: boolean;
+  onToggleGlobalAmountsHidden: () => void;
+  isIncomeHidden: boolean;
+  onToggleIncomeHidden: () => void;
 }
 
 const BudgetPlanning: React.FC<BudgetPlanningProps> = ({
   monthlyBudgets,
   onMonthlyBudgetsChange,
   currentCategories,
-  currentIncome,
   formatCurrency,
   selectedCurrency,
-  userId
+  userId,
+  totalIncome,
+  onTotalIncomeChange,
+  totalAllocated,
+  unallocatedAmount,
+  onCurrencyChange,
+  areGlobalAmountsHidden,
+  onToggleGlobalAmountsHidden,
+  isIncomeHidden,
+  onToggleIncomeHidden
 }) => {
+  const [isOverviewVisible, setIsOverviewVisible] = useState(false);
+  const [isPlanningVisible, setIsPlanningVisible] = useState(true);
   const [selectedMonth, setSelectedMonth] = useState<string>(() => {
     const now = new Date();
     const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
@@ -74,7 +95,7 @@ const BudgetPlanning: React.FC<BudgetPlanningProps> = ({
       month: selectedMonth,
       year,
       monthName,
-      totalIncome: currentIncome,
+      totalIncome: totalIncome,
       categories: currentCategories.map(cat => ({
         ...cat,
         spentAmount: 0,
@@ -190,14 +211,76 @@ const BudgetPlanning: React.FC<BudgetPlanningProps> = ({
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      <div className="bg-slate-800/50 rounded-2xl border border-slate-700 overflow-hidden">
+        <button 
+          onClick={() => setIsOverviewVisible(!isOverviewVisible)}
+          className="w-full flex justify-between items-center p-4 text-left"
+        >
+          <h2 className="text-xl font-semibold text-sky-400">Budget Overview</h2>
+          <motion.div
+            animate={{ rotate: isOverviewVisible ? 180 : 0 }}
+            transition={{ duration: 0.2 }}
+          >
+            <ChevronDownIcon className="w-6 h-6 text-slate-400" />
+          </motion.div>
+        </button>
+        <AnimatePresence>
+          {isOverviewVisible && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.3, ease: 'easeInOut' }}
+              className="px-4 pb-4"
+            >
+              <BudgetOverview
+                totalIncome={totalIncome}
+                onTotalIncomeChange={onTotalIncomeChange}
+                totalAllocated={totalAllocated}
+                unallocatedAmount={unallocatedAmount}
+                selectedCurrency={selectedCurrency}
+                onCurrencyChange={onCurrencyChange}
+                areGlobalAmountsHidden={areGlobalAmountsHidden}
+                onToggleGlobalAmountsHidden={onToggleGlobalAmountsHidden}
+                formatCurrency={formatCurrency}
+                isIncomeHidden={isIncomeHidden}
+                onToggleIncomeHidden={onToggleIncomeHidden}
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+
+      {/* Collapsible Budget Planning Section */}
+      <div className="bg-slate-800/50 rounded-2xl border border-slate-700 overflow-hidden">
+        <button
+          onClick={() => setIsPlanningVisible(!isPlanningVisible)}
+          className="w-full flex justify-between items-center p-4 text-left"
+        >
         <div>
-          <h2 className="text-2xl font-semibold text-sky-400">Budget Planning</h2>
-          <p className="text-slate-400 mt-1">
-            Plan your budgets for future months and create reusable templates
+            <h2 className="text-xl font-semibold text-sky-400">Budget Planning</h2>
+            <p className="text-slate-400 text-sm mt-1">
+              Plan budgets and create reusable templates.
           </p>
         </div>
+          <motion.div
+            animate={{ rotate: isPlanningVisible ? 180 : 0 }}
+            transition={{ duration: 0.2 }}
+          >
+            <ChevronDownIcon className="w-6 h-6 text-slate-400" />
+          </motion.div>
+        </button>
+        <AnimatePresence>
+          {isPlanningVisible && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.3, ease: 'easeInOut' }}
+              className="px-4 pb-4"
+            >
+              <div className="space-y-6 pt-4">
+                <div className="flex justify-end">
         <button
           onClick={() => setShowTemplateManager(true)}
           className="flex items-center space-x-2 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg transition-colors"
@@ -229,77 +312,82 @@ const BudgetPlanning: React.FC<BudgetPlanningProps> = ({
       </div>
 
       {/* Current Budget Status */}
-      <div className="bg-slate-800 p-6 rounded-lg border border-slate-700">
-        <h3 className="text-xl font-semibold text-sky-400 mb-4">
-          Budget for {availableMonths.find(m => m.key === selectedMonth)?.name}
-        </h3>
-        
+      <div className="bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-lg">
+        <div className="flex justify-between items-start">
+            <div>
+                <h3 className="text-xl font-bold text-white mb-1">
+                    Budget for {availableMonths.find(m => m.key === selectedMonth)?.name}
+                </h3>
+                <p className="text-sm text-slate-400">
+                    {currentBudget ? 'A budget is set for this month.' : 'No budget created for this month yet.'}
+                </p>
+            </div>
+            {currentBudget && (
+                <button
+                    onClick={() => deleteBudget(currentBudget.id)}
+                    className="p-2 text-slate-500 hover:text-red-400 hover:bg-red-500/10 rounded-full transition-all"
+                    aria-label="Delete budget"
+                >
+                    <TrashIcon className="w-5 h-5" />
+                </button>
+            )}
+        </div>
+
         {currentBudget ? (
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <span className="text-slate-300">Budget exists for this month</span>
-              <div className="flex space-x-2">
-                <button
-                  onClick={() => setViewingBudget(currentBudget)}
-                  className="flex items-center space-x-2 bg-sky-600 hover:bg-sky-700 text-white px-3 py-2 rounded-lg transition-colors"
-                >
-                  <EyeIcon className="w-4 h-4" />
-                  <span>View Details</span>
-                </button>
-                <button
-                  onClick={() => deleteBudget(currentBudget.id)}
-                  className="flex items-center space-x-2 bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-lg transition-colors"
-                >
-                  <TrashIcon className="w-4 h-4" />
-                  <span>Delete</span>
-                </button>
-              </div>
+          <div className="mt-6">
+            <div className="grid grid-cols-2 gap-4 text-center mb-6">
+                <div>
+                    <p className="text-sm text-slate-400">Total Income</p>
+                    <p className="text-2xl font-bold text-sky-400">{formatCurrency(currentBudget.totalIncome)}</p>
+                </div>
+                <div>
+                    <p className="text-sm text-slate-400">Categories</p>
+                    <p className="text-2xl font-bold text-sky-400">{currentBudget.categories.length}</p>
+                </div>
             </div>
-            
-            <div className="pt-4 border-t border-slate-600">
-                <p className="text-slate-300">Total Income: <span className="font-bold text-emerald-400">{formatCurrency(currentBudget.totalIncome)}</span></p>
-                <p className="text-slate-300">Categories: <span className="font-bold text-purple-400">{currentBudget.categories.length}</span></p>
-            </div>
+            <button
+                onClick={() => setViewingBudget(currentBudget)}
+                className="w-full text-center bg-sky-600/90 hover:bg-sky-600 text-white font-bold py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
+            >
+                <EyeIcon className="w-5 h-5"/>
+                <span>View & Edit Budget</span>
+            </button>
           </div>
         ) : (
-          <div className="space-y-4">
-            <p className="text-slate-400">No budget planned for this month.</p>
-            <div className="flex flex-wrap gap-4">
+          <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="bg-slate-700/50 p-4 rounded-lg border border-slate-600">
+              <h4 className="font-semibold text-white mb-2">Create New Budget</h4>
+              <p className="text-slate-400 text-sm mb-3">Start with an empty slate for the selected month.</p>
               <button
                 onClick={createNewBudget}
-                className="flex items-center space-x-2 bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg transition-colors"
+                className="w-full flex items-center justify-center space-x-2 bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded-lg transition-colors"
               >
                 <PlusIcon className="w-4 h-4" />
-                <span>Create New Budget</span>
-              </button>
-              <button
-                onClick={createBudgetFromCurrent}
-                className="flex items-center space-x-2 bg-sky-600 hover:bg-sky-700 text-white px-4 py-2 rounded-lg transition-colors"
-              >
-                <DocumentDuplicateIcon className="w-4 h-4" />
-                <span>Copy From Current Budget</span>
+                <span>Create Blank Budget</span>
               </button>
             </div>
-            <div className="flex items-center space-x-3 pt-4 border-t border-slate-700">
-              <select
-                value={copyFromBudgetId}
-                onChange={(e) => setCopyFromBudgetId(e.target.value)}
-                className="bg-slate-700 border border-slate-600 text-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-sky-500"
-              >
-                <option value="">Copy from another month...</option>
-                {monthlyBudgets.map(budget => (
-                  <option key={budget.id} value={budget.id}>
-                    {budget.monthName} ({formatCurrency(budget.totalIncome)})
-                  </option>
-                ))}
-              </select>
-              <button
-                onClick={() => copyExistingBudget(copyFromBudgetId)}
-                disabled={!copyFromBudgetId}
-                className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Copy
-              </button>
+
+            <div className="bg-slate-700/50 p-4 rounded-lg border border-slate-600">
+              <h4 className="font-semibold text-white mb-2">Copy Existing Budget</h4>
+              <p className="text-slate-400 text-sm mb-3">Reuse a budget from a previous month to save time.</p>
+              <div className="flex gap-2">
+                <select
+                  value={copyFromBudgetId}
+                  onChange={(e) => setCopyFromBudgetId(e.target.value)}
+                  className="w-full bg-slate-600 border border-slate-500 rounded-lg px-3 py-2 text-sm"
+                >
+                  <option value="">Select a budget to copy...</option>
+                  {monthlyBudgets.map(b => <option key={b.id} value={b.id}>{b.monthName}</option>)}
+                </select>
+                <button
+                  onClick={() => copyExistingBudget(copyFromBudgetId)}
+                  disabled={!copyFromBudgetId}
+                  className="flex items-center space-x-2 bg-sky-600 hover:bg-sky-700 text-white px-3 py-2 rounded-lg transition-colors disabled:bg-slate-500 disabled:cursor-not-allowed"
+                >
+                  <DocumentDuplicateIcon className="w-4 h-4" />
+                  <span>Copy</span>
+                </button>
+              </div>
             </div>
           </div>
         )}
@@ -336,6 +424,11 @@ const BudgetPlanning: React.FC<BudgetPlanningProps> = ({
             </div>
           ))}
         </div>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
       
       {/* Modals */}

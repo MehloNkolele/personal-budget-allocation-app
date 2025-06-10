@@ -14,15 +14,12 @@ import Navbar from './components/Navbar';
 import { CURRENCIES } from './constants';
 import { ToastProvider } from './contexts/ToastContext';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
-import { NotificationProvider } from './contexts/NotificationContext';
 import { useToast } from './hooks/useToast';
-import { useNotifications } from './hooks/useNotifications';
 import Toaster from './components/Toaster';
 import { UserDataManager } from './utils/userDataManager';
 
 const AppContent: React.FC = () => {
   const { addToast } = useToast();
-  const { generateBudgetNotifications } = useNotifications();
   const { user } = useAuth();
   const [totalIncome, setTotalIncome] = useState<number>(0);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -82,7 +79,6 @@ const AppContent: React.FC = () => {
       UserDataManager.saveUserData(user.uid, { totalIncome, categories, transactions, selectedCurrency, areGlobalAmountsHidden, isIncomeHidden, monthlyBudgets }); 
     }
   }, [user, isDataLoaded, totalIncome, categories, transactions, selectedCurrency, areGlobalAmountsHidden, isIncomeHidden, monthlyBudgets]);
-  useEffect(() => { if (categories.length > 0 || transactions.length > 0) generateBudgetNotifications(categories, transactions, totalIncome); }, [categories, transactions, totalIncome, generateBudgetNotifications]);
 
   const handleSectionChange = useCallback((section: 'dashboard' | 'categories' | 'reports' | 'planning' | 'history' | 'savings') => setCurrentSection(section), []);
   const handleTotalIncomeChange = useCallback((income: number) => { setTotalIncome(income); setIsIncomeHidden(true); }, []);
@@ -212,10 +208,33 @@ const AppContent: React.FC = () => {
           areGlobalAmountsHidden={areGlobalAmountsHidden} 
         />;
       case 'reports': return <Reports categories={categories} transactions={transactions} totalIncome={totalIncome} formatCurrency={formatCurrency} selectedCurrency={selectedCurrency} />;
-      case 'planning': return <BudgetPlanning monthlyBudgets={monthlyBudgets} onMonthlyBudgetsChange={setMonthlyBudgets} currentCategories={categories} currentIncome={totalIncome} formatCurrency={formatCurrency} selectedCurrency={selectedCurrency} userId={user?.uid ?? ''} />;
+      case 'planning': return <BudgetPlanning 
+          monthlyBudgets={monthlyBudgets} 
+          onMonthlyBudgetsChange={setMonthlyBudgets} 
+          currentCategories={categories} 
+          userId={user?.uid ?? ''}
+          totalIncome={totalIncome}
+          onTotalIncomeChange={handleTotalIncomeChange}
+          totalAllocated={totalAllocated}
+          unallocatedAmount={unallocatedAmount}
+          selectedCurrency={selectedCurrency}
+          onCurrencyChange={handleCurrencyChange}
+          areGlobalAmountsHidden={areGlobalAmountsHidden}
+          onToggleGlobalAmountsHidden={toggleGlobalAmountsHidden}
+          formatCurrency={formatCurrency}
+          isIncomeHidden={isIncomeHidden}
+          onToggleIncomeHidden={toggleIncomeHidden}
+        />;
       case 'history': return <BudgetHistory monthlyBudgets={monthlyBudgets} allTransactions={transactions} formatCurrency={formatCurrency} selectedCurrency={selectedCurrency} />;
       case 'savings': return <SavingsCalculator />;
-      default: return <Dashboard totalIncome={totalIncome} onTotalIncomeChange={handleTotalIncomeChange} totalAllocated={totalAllocated} unallocatedAmount={unallocatedAmount} selectedCurrency={selectedCurrency} onCurrencyChange={handleCurrencyChange} areGlobalAmountsHidden={areGlobalAmountsHidden} onToggleGlobalAmountsHidden={toggleGlobalAmountsHidden} formatCurrency={formatCurrencyWithVisibility} categories={categories} onAddCategory={() => openModal({ type: 'addCategory' })} isIncomeHidden={isIncomeHidden} onToggleIncomeHidden={toggleIncomeHidden} />;
+      default: return <Dashboard 
+          totalIncome={totalIncome}
+          totalAllocated={totalAllocated}
+          unallocatedAmount={unallocatedAmount}
+          formatCurrency={formatCurrency} 
+          categories={categories} 
+          onAddCategory={() => openModal({ type: 'addCategory' })}
+        />;
     }
   };
 
@@ -254,26 +273,25 @@ const AppContent: React.FC = () => {
         {(modalState?.type === 'addSubcategory' || modalState?.type === 'editSubcategory') && subcategoryFormProps && <SubcategoryForm {...subcategoryFormProps} />}
       </Modal>
 
-      {modalState?.type === 'deleteCategory' && 
-        <ConfirmationModal 
+      {modalState?.type === 'deleteCategory' && (
+        <ConfirmationModal
           isOpen={true}
           onClose={closeModal}
           onConfirm={() => confirmDeleteCategory(modalState.category.id)}
-          title="Delete Category"
-          message={`Are you sure you want to delete "${modalState.category.name}"? This action cannot be undone.`}
-          isDangerous={true}
+          title={`Delete ${modalState.category.name}?`}
+          message={`Are you sure you want to delete the category "${modalState.category.name}"? This action cannot be undone.`}
         />
-      }
-      {modalState?.type === 'deleteSubcategory' && 
-        <ConfirmationModal 
+      )}
+
+      {modalState?.type === 'deleteSubcategory' && (
+        <ConfirmationModal
           isOpen={true}
           onClose={closeModal}
           onConfirm={() => confirmDeleteSubcategory(modalState.parentCategoryId, modalState.subcategory.id)}
-          title="Delete Subcategory"
-          message={`Are you sure you want to delete "${modalState.subcategory.name}" from "${modalState.parentCategoryName}"?`}
-          isDangerous={true}
+          title={`Delete ${modalState.subcategory.name}?`}
+          message={`Are you sure you want to delete the subcategory "${modalState.subcategory.name}" from "${modalState.parentCategoryName}"? This action cannot be undone.`}
         />
-      }
+      )}
     </div>
   );
 };
@@ -281,9 +299,7 @@ const AppContent: React.FC = () => {
 const App: React.FC = () => (
   <AuthProvider>
     <ToastProvider>
-      <NotificationProvider>
-        <AppContent />
-      </NotificationProvider>
+      <AppContent />
     </ToastProvider>
   </AuthProvider>
 );
