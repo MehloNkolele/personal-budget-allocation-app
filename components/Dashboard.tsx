@@ -1,5 +1,4 @@
 import React from 'react';
-import ProgressBar from './ProgressBar';
 
 interface DashboardProps {
   totalIncome: number;
@@ -32,60 +31,92 @@ const Dashboard: React.FC<DashboardProps> = ({
   const savingsAmount = Math.max(0, unallocatedAmount);
   const savingsRate = totalIncome > 0 ? (savingsAmount / totalIncome) * 100 : 0;
 
+  // Enhanced display logic with better data
+  const hasData = totalIncome > 0 || categories.length > 0;
+  const completionRate = totalSubcategories > 0 ? (completedSubcategories / totalSubcategories) * 100 : 0;
+
   return (
-    <div className="space-y-6">
-      {/* Quick Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-slate-800 p-4 rounded-lg">
+    <div className="space-y-8">
+      {/* Welcome Header */}
+      <div className="text-center py-6">
+        <h1 className="text-3xl font-bold text-white mb-2">Budget Dashboard</h1>
+        <p className="text-slate-400 text-lg">Get a clear overview of your financial health</p>
+      </div>
+
+      {/* Enhanced Stats Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+        {/* Categories Card */}
+        <div className="bg-gradient-to-br from-slate-800 to-slate-700 p-6 rounded-2xl border border-slate-600 hover:border-sky-500 transition-all duration-300 group">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-slate-400 text-sm">Categories</p>
-              <p className="text-2xl font-bold text-sky-400">{totalCategories}</p>
+              <p className="text-slate-400 text-sm font-medium mb-1">Active Categories</p>
+              <p className="text-3xl font-bold text-sky-400 mb-2">{totalCategories}</p>
+              <div className="flex items-center text-xs text-slate-500">
+                <div className="w-2 h-2 bg-sky-400 rounded-full mr-2"></div>
+                {totalSubcategories} subcategories
+              </div>
             </div>
-            <div className="w-12 h-12 bg-sky-500/20 rounded-lg flex items-center justify-center">
-              <svg className="w-6 h-6 text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="w-14 h-14 bg-sky-500/20 rounded-xl flex items-center justify-center group-hover:bg-sky-500/30 transition-colors">
+              <svg className="w-7 h-7 text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
               </svg>
             </div>
           </div>
         </div>
 
-        <div className="bg-slate-800 p-4 rounded-lg">
+        {/* Allocation Rate Card */}
+        <div className="bg-gradient-to-br from-slate-800 to-slate-700 p-6 rounded-2xl border border-slate-600 hover:border-emerald-500 transition-all duration-300 group">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-slate-400 text-sm">Allocation Rate</p>
-              <p className="text-2xl font-bold text-emerald-400">{allocationPercentage.toFixed(1)}%</p>
+              <p className="text-slate-400 text-sm font-medium mb-1">Allocation Rate</p>
+              <p className="text-3xl font-bold text-emerald-400 mb-2">{allocationPercentage.toFixed(1)}%</p>
+              <div className="w-full bg-slate-600 rounded-full h-2">
+                <div 
+                  className="bg-emerald-400 h-2 rounded-full transition-all duration-500"
+                  style={{ width: `${Math.min(allocationPercentage, 100)}%` }}
+                ></div>
+              </div>
             </div>
-            <div className="w-12 h-12 bg-emerald-500/20 rounded-lg flex items-center justify-center">
-              <svg className="w-6 h-6 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="w-14 h-14 bg-emerald-500/20 rounded-xl flex items-center justify-center group-hover:bg-emerald-500/30 transition-colors">
+              <svg className="w-7 h-7 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
               </svg>
             </div>
           </div>
         </div>
 
-        <div className="bg-slate-800 p-4 rounded-lg">
+        {/* Task Completion Card */}
+        <div className="bg-gradient-to-br from-slate-800 to-slate-700 p-6 rounded-2xl border border-slate-600 hover:border-purple-500 transition-all duration-300 group">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-slate-400 text-sm">Tasks</p>
-              <p className="text-2xl font-bold text-purple-400">{completedSubcategories}/{totalSubcategories}</p>
+              <p className="text-slate-400 text-sm font-medium mb-1">Task Progress</p>
+              <p className="text-3xl font-bold text-purple-400 mb-2">{completedSubcategories}/{totalSubcategories}</p>
+              <div className="flex items-center text-xs text-slate-500">
+                <div className="w-2 h-2 bg-purple-400 rounded-full mr-2"></div>
+                {completionRate.toFixed(0)}% complete
+              </div>
             </div>
-            <div className="w-12 h-12 bg-purple-500/20 rounded-lg flex items-center justify-center">
-              <svg className="w-6 h-6 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="w-14 h-14 bg-purple-500/20 rounded-xl flex items-center justify-center group-hover:bg-purple-500/30 transition-colors">
+              <svg className="w-7 h-7 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
           </div>
         </div>
 
-        <div className="bg-slate-800 p-4 rounded-lg">
+        {/* Savings Rate Card */}
+        <div className="bg-gradient-to-br from-slate-800 to-slate-700 p-6 rounded-2xl border border-slate-600 hover:border-amber-500 transition-all duration-300 group">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-slate-400 text-sm">Savings Rate</p>
-              <p className="text-2xl font-bold text-amber-400">{savingsRate.toFixed(1)}%</p>
+              <p className="text-slate-400 text-sm font-medium mb-1">Savings Potential</p>
+              <p className="text-3xl font-bold text-amber-400 mb-2">{savingsRate.toFixed(1)}%</p>
+              <div className="flex items-center text-xs text-slate-500">
+                <div className="w-2 h-2 bg-amber-400 rounded-full mr-2"></div>
+                {savingsRate > 0 ? 'Funds available' : 'No surplus'}
+              </div>
             </div>
-            <div className="w-12 h-12 bg-amber-500/20 rounded-lg flex items-center justify-center">
-              <svg className="w-6 h-6 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="w-14 h-14 bg-amber-500/20 rounded-xl flex items-center justify-center group-hover:bg-amber-500/30 transition-colors">
+              <svg className="w-7 h-7 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
               </svg>
             </div>
@@ -93,31 +124,172 @@ const Dashboard: React.FC<DashboardProps> = ({
         </div>
       </div>
 
-      {topCategories.length > 0 && (
-        <div className="bg-slate-800 p-6 rounded-lg">
-          <h3 className="text-xl font-semibold mb-4 text-sky-400">Top Categories</h3>
-          <ul className="space-y-4">
-            {topCategories.map(cat => (
-              <li key={cat.id} className="flex justify-between items-center">
-                <span className="text-slate-300">{cat.name}</span>
-                <span className="font-semibold text-sky-400">{formatCurrency(cat.allocatedAmount)}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-      
-      {categories.length === 0 && (
-          <div className="text-center py-10 px-6 bg-slate-800 rounded-lg">
-              <h3 className="text-xl font-semibold text-white">Welcome to Your Budget Dashboard!</h3>
-              <p className="text-slate-400 mt-2 mb-4">Get started by adding a category to your budget.</p>
-              <button
-                onClick={onAddCategory}
-                className="bg-sky-600 hover:bg-sky-700 text-white font-bold py-2 px-4 rounded-lg transition-colors"
-              >
-                Add First Category
-              </button>
+      {/* Enhanced Content Section */}
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+        {/* Top Categories */}
+        {topCategories.length > 0 && (
+          <div className="xl:col-span-2 bg-gradient-to-br from-slate-800 to-slate-700 p-8 rounded-2xl border border-slate-600">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-2xl font-bold text-white">Top Categories</h3>
+              <div className="flex items-center text-sm text-slate-400">
+                <div className="w-2 h-2 bg-sky-400 rounded-full mr-2"></div>
+                Budget allocation breakdown
+              </div>
+            </div>
+            <div className="space-y-6">
+              {topCategories.map((cat, index) => {
+                const percentage = totalAllocated > 0 ? (cat.allocatedAmount / totalAllocated) * 100 : 0;
+                const colors = ['bg-sky-400', 'bg-emerald-400', 'bg-purple-400'];
+                const bgColors = ['bg-sky-500/20', 'bg-emerald-500/20', 'bg-purple-500/20'];
+                
+                return (
+                  <div key={cat.id} className="flex items-center justify-between p-4 bg-slate-700/50 rounded-xl hover:bg-slate-700/70 transition-colors">
+                    <div className="flex items-center space-x-4">
+                      <div className={`w-12 h-12 ${bgColors[index]} rounded-xl flex items-center justify-center`}>
+                        <div className={`w-3 h-3 ${colors[index]} rounded-full`}></div>
+                      </div>
+                      <div>
+                        <p className="text-white font-semibold text-lg">{cat.name}</p>
+                        <p className="text-slate-400 text-sm">{percentage.toFixed(1)}% of budget</p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sky-400 font-bold text-xl">{formatCurrency(cat.allocatedAmount)}</p>
+                      <p className="text-slate-500 text-sm">{cat.subcategories?.length || 0} items</p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
+        )}
+
+        {/* Quick Insights Summary */}
+        <div className="bg-gradient-to-br from-slate-800 to-slate-700 p-8 rounded-2xl border border-slate-600">
+          <h3 className="text-2xl font-bold text-white mb-6">Quick Insights</h3>
+          
+          {hasData ? (
+            <div className="space-y-6">
+              {/* Budget Allocation Progress */}
+              <div className="p-4 bg-slate-700/50 rounded-xl">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-slate-400 font-medium">Budget Progress</span>
+                  <span className="text-sky-400 font-bold text-sm">{allocationPercentage.toFixed(1)}%</span>
+                </div>
+                <div className="w-full bg-slate-600 rounded-full h-3">
+                  <div 
+                    className={`h-3 rounded-full transition-all duration-500 ${
+                      allocationPercentage > 100 ? 'bg-red-500' : 'bg-sky-400'
+                    }`}
+                    style={{ width: `${Math.min(allocationPercentage, 100)}%` }}
+                  ></div>
+                </div>
+                <div className="text-xs text-slate-500 mt-2">
+                  {allocationPercentage > 100 ? 'Over allocated' : 
+                   allocationPercentage >= 80 ? 'Well allocated' : 'Room to allocate more'}
+                </div>
+              </div>
+
+              {/* Category Distribution */}
+              <div className="p-4 bg-slate-700/50 rounded-xl">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-slate-400 font-medium">Categories</span>
+                  <span className="text-purple-400 font-bold text-lg">{totalCategories}</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <div className="flex-1 bg-slate-600 rounded-full h-2">
+                    <div className="bg-purple-400 h-2 rounded-full w-full"></div>
+                  </div>
+                </div>
+                <div className="text-xs text-slate-500 mt-2">
+                  {totalSubcategories} subcategories total
+                </div>
+              </div>
+
+              {/* Task Completion */}
+              <div className="p-4 bg-slate-700/50 rounded-xl">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-slate-400 font-medium">Task Completion</span>
+                  <span className="text-emerald-400 font-bold text-sm">{completionRate.toFixed(0)}%</span>
+                </div>
+                <div className="w-full bg-slate-600 rounded-full h-3">
+                  <div 
+                    className="bg-emerald-400 h-3 rounded-full transition-all duration-500"
+                    style={{ width: `${completionRate}%` }}
+                  ></div>
+                </div>
+                <div className="text-xs text-slate-500 mt-2">
+                  {completedSubcategories} of {totalSubcategories} tasks done
+                </div>
+              </div>
+
+              {/* Budget Health Status */}
+              <div className="p-4 bg-slate-700/50 rounded-xl">
+                <div className="flex items-center space-x-3 mb-2">
+                  <div className={`w-3 h-3 rounded-full ${
+                    allocationPercentage <= 100 && allocationPercentage >= 80 ? 'bg-emerald-400' :
+                    allocationPercentage > 100 ? 'bg-red-400' : 'bg-amber-400'
+                  }`}></div>
+                  <span className="text-white font-medium">
+                    {allocationPercentage <= 100 && allocationPercentage >= 80 ? 'Excellent balance!' :
+                     allocationPercentage > 100 ? 'Review needed' : 'Good progress'}
+                  </span>
+                </div>
+                <div className="text-xs text-slate-500">
+                  {allocationPercentage <= 100 && allocationPercentage >= 80 ? 'Your budget allocation looks great' :
+                   allocationPercentage > 100 ? 'Consider adjusting some categories' : 'You can allocate more to categories'}
+                </div>
+              </div>
+
+              {/* Savings Potential */}
+              <div className="p-4 bg-slate-700/50 rounded-xl">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-slate-400 font-medium">Savings Rate</span>
+                  <span className="text-amber-400 font-bold text-lg">{savingsRate.toFixed(1)}%</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <svg className="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                  </svg>
+                  <span className="text-xs text-slate-500">
+                    {savingsRate > 20 ? 'Excellent savings!' : 
+                     savingsRate > 10 ? 'Good savings rate' : 'Consider saving more'}
+                  </span>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="text-center py-8">
+              <div className="w-16 h-16 bg-slate-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg className="w-8 h-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                </svg>
+              </div>
+              <p className="text-slate-400 text-sm">Set up your budget to see insights</p>
+            </div>
+          )}
+        </div>
+      </div>
+      
+      {/* Welcome Message for New Users */}
+      {categories.length === 0 && (
+        <div className="text-center py-12 px-8 bg-gradient-to-br from-sky-900/30 to-purple-900/30 rounded-2xl border border-sky-500/30">
+          <div className="w-20 h-20 bg-sky-500/20 rounded-2xl flex items-center justify-center mx-auto mb-6">
+            <svg className="w-10 h-10 text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+            </svg>
+          </div>
+          <h3 className="text-2xl font-bold text-white mb-3">Welcome to Your Budget Dashboard!</h3>
+          <p className="text-slate-300 text-lg mb-6 max-w-md mx-auto">
+            Take control of your finances by creating your first budget category.
+          </p>
+          <button
+            onClick={onAddCategory}
+            className="bg-gradient-to-r from-sky-600 to-purple-600 hover:from-sky-700 hover:to-purple-700 text-white font-bold py-4 px-8 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg"
+          >
+            Create Your First Category
+          </button>
+        </div>
       )}
     </div>
   );

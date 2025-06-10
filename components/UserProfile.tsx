@@ -26,10 +26,22 @@ const UserProfile: React.FC<UserProfileProps> = ({ isOpen, onClose }) => {
           <header className="flex items-center justify-between p-4 border-b border-slate-700 flex-shrink-0">
             <div className="flex items-center space-x-4">
               {user.photoURL ? (
-                <img src={user.photoURL} alt="Profile" className="w-10 h-10 rounded-full" />
+                <div className="relative">
+                  <img 
+                    src={user.photoURL} 
+                    alt="Profile" 
+                    className="w-14 h-14 rounded-2xl shadow-lg ring-2 ring-violet-500/30 object-cover" 
+                  />
+                  <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-violet-400/10 via-sky-500/10 to-purple-600/10"></div>
+                </div>
               ) : (
-                <div className="w-10 h-10 bg-sky-600 rounded-full flex items-center justify-center">
-                  <span className="text-white font-semibold text-lg">{user.displayName?.charAt(0) || 'U'}</span>
+                <div className="relative">
+                  <div className="w-14 h-14 bg-gradient-to-br from-violet-600 via-purple-600 to-fuchsia-700 rounded-2xl flex items-center justify-center shadow-lg ring-2 ring-violet-500/30">
+                    <span className="text-white font-bold text-xl bg-gradient-to-br from-white via-slate-100 to-slate-200 bg-clip-text text-transparent drop-shadow-sm">
+                      {user.displayName?.charAt(0) || 'U'}
+                    </span>
+                  </div>
+                  <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-violet-400/20 via-purple-500/15 to-fuchsia-600/20"></div>
                 </div>
               )}
               <div>

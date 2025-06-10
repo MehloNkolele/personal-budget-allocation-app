@@ -95,20 +95,39 @@ const UserDropdown: React.FC<UserDropdownProps> = ({
           {/* Enhanced User Avatar */}
           <div className="relative flex-shrink-0">
             {user.photoURL ? (
-              <img
-                src={user.photoURL}
-                alt="Profile"
-                className="w-9 h-9 rounded-full ring-2 ring-slate-600 group-hover:ring-sky-500 transition-all duration-300 object-cover flex-shrink-0 aspect-square"
-              />
+              <div className="relative">
+                <img
+                  src={user.photoURL}
+                  alt="Profile"
+                  className="w-10 h-10 rounded-2xl ring-2 ring-slate-600/50 group-hover:ring-violet-500/60 transition-all duration-500 object-cover flex-shrink-0 aspect-square shadow-lg group-hover:shadow-violet-500/30 group-hover:scale-105"
+                />
+                {/* Profile image glow effect */}
+                <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-violet-400/20 via-sky-500/20 to-purple-600/20 opacity-0 group-hover:opacity-100 transition-all duration-500 blur-sm"></div>
+              </div>
             ) : (
-              <div className="w-9 h-9 bg-gradient-to-br from-sky-500 to-sky-600 rounded-full flex items-center justify-center ring-2 ring-slate-600 group-hover:ring-sky-500 transition-all duration-300 shadow-lg flex-shrink-0 aspect-square">
-                <span className="text-white font-semibold text-sm">
-                  {user.displayName?.charAt(0) || user.email?.charAt(0) || 'U'}
-                </span>
+              <div className="relative">
+                <div className="w-10 h-10 bg-gradient-to-br from-violet-600 via-purple-600 to-fuchsia-700 rounded-2xl flex items-center justify-center ring-2 ring-slate-600/50 group-hover:ring-violet-500/60 transition-all duration-500 shadow-lg group-hover:shadow-violet-500/30 flex-shrink-0 aspect-square group-hover:scale-105">
+                  <span className="text-white font-bold text-sm bg-gradient-to-br from-white via-slate-100 to-slate-200 bg-clip-text text-transparent drop-shadow-sm">
+                    {user.displayName?.charAt(0) || user.email?.charAt(0) || 'U'}
+                  </span>
+                </div>
+                {/* Avatar glow effect */}
+                <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-violet-400/30 via-purple-500/20 to-fuchsia-600/30 opacity-0 group-hover:opacity-100 transition-all duration-500 blur-sm"></div>
+                
+                {/* Floating particles around avatar */}
+                <div className="absolute inset-0 pointer-events-none">
+                  <div className="absolute top-0 right-1 w-1 h-1 bg-violet-400 rounded-full animate-float opacity-0 group-hover:opacity-100 transition-opacity duration-500" style={{animationDelay: '0s', animationDuration: '3s'}}></div>
+                  <div className="absolute bottom-1 left-0 w-0.5 h-0.5 bg-sky-400 rounded-full animate-float opacity-0 group-hover:opacity-100 transition-opacity duration-500" style={{animationDelay: '1s', animationDuration: '4s'}}></div>
+                  <div className="absolute top-2 left-1 w-0.5 h-0.5 bg-purple-400 rounded-full animate-float opacity-0 group-hover:opacity-100 transition-opacity duration-500" style={{animationDelay: '2s', animationDuration: '5s'}}></div>
+                </div>
               </div>
             )}
-            {/* Enhanced Online Status Indicator */}
-            <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-400 border-2 border-slate-800 rounded-full shadow-sm animate-pulse"></div>
+            {/* Enhanced Online Status Indicator with pulse effect */}
+            <div className="absolute -bottom-0.5 -right-0.5">
+              <div className="w-3.5 h-3.5 bg-gradient-to-br from-emerald-400 to-emerald-500 border-2 border-slate-800 rounded-full shadow-lg">
+                <div className="w-full h-full bg-emerald-400 rounded-full animate-ping opacity-75"></div>
+              </div>
+            </div>
           </div>
 
           {/* User Info (Hidden on small screens) */}
@@ -137,16 +156,22 @@ const UserDropdown: React.FC<UserDropdownProps> = ({
               <div className="px-4 py-3 border-b border-slate-700/50">
                 <div className="flex items-center space-x-3">
                   {user.photoURL ? (
-                    <img
-                      src={user.photoURL}
-                      alt="Profile"
-                      className="w-10 h-10 rounded-full"
-                    />
+                    <div className="relative">
+                      <img
+                        src={user.photoURL}
+                        alt="Profile"
+                        className="w-12 h-12 rounded-2xl shadow-lg ring-2 ring-violet-500/30 object-cover"
+                      />
+                      <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-violet-400/10 via-sky-500/10 to-purple-600/10"></div>
+                    </div>
                   ) : (
-                    <div className="w-10 h-10 bg-gradient-to-br from-sky-500 to-sky-600 rounded-full flex items-center justify-center">
-                      <span className="text-white font-semibold">
-                        {user.displayName?.charAt(0) || user.email?.charAt(0) || 'U'}
-                      </span>
+                    <div className="relative">
+                      <div className="w-12 h-12 bg-gradient-to-br from-violet-600 via-purple-600 to-fuchsia-700 rounded-2xl flex items-center justify-center shadow-lg ring-2 ring-violet-500/30">
+                        <span className="text-white font-bold text-lg bg-gradient-to-br from-white via-slate-100 to-slate-200 bg-clip-text text-transparent drop-shadow-sm">
+                          {user.displayName?.charAt(0) || user.email?.charAt(0) || 'U'}
+                        </span>
+                      </div>
+                      <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-violet-400/20 via-purple-500/15 to-fuchsia-600/20"></div>
                     </div>
                   )}
                   <div className="flex-1 min-w-0">

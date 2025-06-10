@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BudgetPro Logo Generator</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background: #1e293b;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            color: white;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            text-align: center;
+        }
+        .logo-showcase {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 30px;
+            margin: 40px 0;
+        }
+        .logo-variant {
+            background: #334155;
+            padding: 30px;
+            border-radius: 20px;
+            border: 1px solid #475569;
+        }
+        .logo-variant h3 {
+            margin: 0 0 20px 0;
+            color: #94a3b8;
+        }
+        #canvas {
+            border: 1px solid #475569;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin: 30px 0;
+        }
+        button {
+            background: linear-gradient(135deg, #10b981, #0ea5e9, #8b5cf6);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: transform 0.2s;
+        }
+        button:hover {
+            transform: scale(1.05);
+        }
+        .download-link {
+            display: inline-block;
+            background: #059669;
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            margin: 10px;
+            font-weight: 600;
+        }
+        .download-link:hover {
+            background: #047857;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>BudgetPro Logo Generator</h1>
+        <p>Generate high-quality app icons and logos for your budget application</p>
+        
+        <div class="logo-showcase">
+            <!-- App Icon Preview -->
+            <div class="logo-variant">
+                <h3>App Icon (512×512)</h3>
+                <div id="app-icon-512"></div>
+                <a href="#" class="download-link" id="download-512">Download PNG</a>
+            </div>
+            
+            <!-- Small Icon Preview -->
+            <div class="logo-variant">
+                <h3>Small Icon (192×192)</h3>
+                <div id="app-icon-192"></div>
+                <a href="#" class="download-link" id="download-192">Download PNG</a>
+            </div>
+            
+            <!-- Favicon Preview -->
+            <div class="logo-variant">
+                <h3>Favicon (64×64)</h3>
+                <div id="favicon-64"></div>
+                <a href="#" class="download-link" id="download-64">Download PNG</a>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button onclick="generateAllIcons()">Generate All Icons</button>
+            <button onclick="downloadAll()">Download All</button>
+        </div>
+        
+        <canvas id="canvas" style="display: none;"></canvas>
+    </div>
+
+    <script>
+        // Enhanced BudgetPro Logo Generator
+        function createLogo(size) {
+            const canvas = document.getElementById('canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = size;
+            canvas.height = size;
+            
+            // Clear canvas
+            ctx.clearRect(0, 0, size, size);
+            
+            // Scale factors
+            const scale = size / 512;
+            const borderRadius = 80 * scale;
+            const innerRadius = 72 * scale;
+            
+            // Create main gradient background
+            const gradient = ctx.createLinearGradient(0, 0, size, size);
+            gradient.addColorStop(0, '#10b981'); // emerald-500
+            gradient.addColorStop(0.5, '#0ea5e9'); // sky-500  
+            gradient.addColorStop(1, '#8b5cf6'); // purple-500
+            
+            // Draw main rounded rectangle
+            ctx.fillStyle = gradient;
+            drawRoundedRect(ctx, 0, 0, size, size, borderRadius);
+            ctx.fill();
+            
+            // Inner dark area
+            const innerGradient = ctx.createLinearGradient(8*scale, 8*scale, size-16*scale, size-16*scale);
+            innerGradient.addColorStop(0, '#0f172a'); // slate-900
+            innerGradient.addColorStop(0.5, '#1e293b'); // slate-800
+            innerGradient.addColorStop(1, '#0f172a'); // slate-900
+            
+            ctx.fillStyle = innerGradient;
+            drawRoundedRect(ctx, 8*scale, 8*scale, size-16*scale, size-16*scale, innerRadius);
+            ctx.fill();
+            
+            // Draw dollar sign
+            ctx.fillStyle = '#10b981'; // emerald-400
+            ctx.font = `bold ${180*scale}px Arial`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            
+            // Add text shadow effect
+            ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
+            ctx.shadowBlur = 4*scale;
+            ctx.shadowOffsetX = 2*scale;
+            ctx.shadowOffsetY = 2*scale;
+            
+            ctx.fillText('$', size/2, size/2);
+            
+            // Reset shadow
+            ctx.shadowColor = 'transparent';
+            ctx.shadowBlur = 0;
+            ctx.shadowOffsetX = 0;
+            ctx.shadowOffsetY = 0;
+            
+            // Draw indicator dots
+            const dotSize = 8 * scale;
+            const dotSpacing = 12 * scale;
+            const startX = size - 40*scale;
+            const startY = 25*scale;
+            
+            // Sky dot
+            ctx.fillStyle = '#0ea5e9';
+            ctx.beginPath();
+            ctx.arc(startX, startY, dotSize/2, 0, 2 * Math.PI);
+            ctx.fill();
+            
+            // Purple dot
+            ctx.fillStyle = '#8b5cf6';
+            ctx.beginPath();
+            ctx.arc(startX + dotSpacing, startY, dotSize/2, 0, 2 * Math.PI);
+            ctx.fill();
+            
+            // Emerald dot
+            ctx.fillStyle = '#10b981';
+            ctx.beginPath();
+            ctx.arc(startX + dotSpacing*2, startY, dotSize/2, 0, 2 * Math.PI);
+            ctx.fill();
+            
+            // Draw progress bar
+            const barY = size - 25*scale;
+            const barHeight = 4*scale;
+            const barWidth = size - 40*scale;
+            const progressWidth = barWidth * 0.75;
+            
+            // Background bar
+            ctx.fillStyle = '#374151';
+            drawRoundedRect(ctx, 20*scale, barY, barWidth, barHeight, barHeight/2);
+            ctx.fill();
+            
+            // Progress bar gradient
+            const progressGradient = ctx.createLinearGradient(20*scale, 0, 20*scale + progressWidth, 0);
+            progressGradient.addColorStop(0, '#10b981');
+            progressGradient.addColorStop(1, '#0ea5e9');
+            
+            ctx.fillStyle = progressGradient;
+            drawRoundedRect(ctx, 20*scale, barY, progressWidth, barHeight, barHeight/2);
+            ctx.fill();
+            
+            return canvas.toDataURL('image/png');
+        }
+        
+        function drawRoundedRect(ctx, x, y, width, height, radius) {
+            ctx.beginPath();
+            ctx.moveTo(x + radius, y);
+            ctx.lineTo(x + width - radius, y);
+            ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+            ctx.lineTo(x + width, y + height - radius);
+            ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+            ctx.lineTo(x + radius, y + height);
+            ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+            ctx.lineTo(x, y + radius);
+            ctx.quadraticCurveTo(x, y, x + radius, y);
+            ctx.closePath();
+        }
+        
+        function generateAllIcons() {
+            // Generate 512x512 icon
+            const icon512 = createLogo(512);
+            document.getElementById('app-icon-512').innerHTML = `<img src="${icon512}" style="width: 128px; height: 128px; border-radius: 20px;">`;
+            document.getElementById('download-512').href = icon512;
+            document.getElementById('download-512').download = 'icon-512.png';
+            
+            // Generate 192x192 icon
+            const icon192 = createLogo(192);
+            document.getElementById('app-icon-192').innerHTML = `<img src="${icon192}" style="width: 96px; height: 96px; border-radius: 15px;">`;
+            document.getElementById('download-192').href = icon192;
+            document.getElementById('download-192').download = 'icon-192.png';
+            
+            // Generate 64x64 favicon
+            const icon64 = createLogo(64);
+            document.getElementById('favicon-64').innerHTML = `<img src="${icon64}" style="width: 64px; height: 64px; border-radius: 10px;">`;
+            document.getElementById('download-64').href = icon64;
+            document.getElementById('download-64').download = 'favicon-64.png';
+        }
+        
+        function downloadAll() {
+            // Trigger all downloads
+            document.getElementById('download-512').click();
+            setTimeout(() => document.getElementById('download-192').click(), 500);
+            setTimeout(() => document.getElementById('download-64').click(), 1000);
+        }
+        
+        // Generate icons on page load
+        window.onload = function() {
+            generateAllIcons();
+        };
+    </script>
+</body>
+</html>

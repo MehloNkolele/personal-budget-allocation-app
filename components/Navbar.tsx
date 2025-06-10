@@ -12,6 +12,7 @@ import {
   CurrencyDollarIcon
 } from '../constants';
 import UserDropdown from './UserDropdown';
+import Logo from './Logo';
 
 interface NavbarProps {
   onNewCategory: () => void;
@@ -67,18 +68,11 @@ const Navbar: React.FC<NavbarProps> = ({
           <div className="flex justify-between items-center py-3 h-16">
             {/* Left Side: Logo and Desktop Navigation */}
             <div className="flex items-center space-x-8">
-              <button 
+              <Logo 
+                size="medium"
+                variant="full"
                 onClick={handleLogoClick}
-                className="flex items-center space-x-3 group"
-              >
-                <div className="flex items-center justify-center h-10 w-10 bg-gradient-to-br from-sky-500 to-sky-600 rounded-xl shadow-lg shadow-sky-600/30 transition-transform duration-300 group-hover:scale-110">
-                  <span className="text-white font-bold text-lg">BP</span>
-                </div>
-                <div className="hidden sm:block">
-                  <h1 className="text-white text-lg font-bold leading-tight">Budget Planner</h1>
-                  <p className="text-slate-400 text-xs">Financial Control</p>
-                </div>
-              </button>
+              />
 
               {/* Desktop Navigation */}
               <div className="hidden lg:flex items-center space-x-1">

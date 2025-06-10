@@ -1,5 +1,4 @@
 import React, { useState, useRef } from 'react';
-import ProgressBar from './ProgressBar';
 import { InfoIcon, CheckCircleIcon, EyeIcon, EyeSlashIcon } from '../constants';
 import { CURRENCIES } from '../constants';
 
@@ -51,113 +50,195 @@ const BudgetOverview: React.FC<BudgetOverviewProps> = ({
       onToggleIncomeHidden();
     }
   };
-
   return (
     <>
-      <div className="flex justify-between items-center mb-4 border-b border-slate-700 pb-4">
-        <h3 className="text-lg font-semibold text-slate-300">Income & Currency</h3>
-        <button
+      {/* Enhanced Header Section */}
+      <div className="mb-8">
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h2 className="text-2xl font-bold text-white mb-2">Budget Overview</h2>
+            <p className="text-slate-400">Configure your income and track your allocation progress</p>
+          </div>
+          <button 
             onClick={onToggleGlobalAmountsHidden}
-            className="p-2 text-slate-400 hover:text-sky-400 transition-colors"
+            className="flex items-center space-x-2 bg-slate-700 hover:bg-slate-600 px-4 py-2 rounded-xl transition-all duration-200"
             aria-label={areGlobalAmountsHidden ? "Show amounts" : "Hide amounts"}
-            aria-pressed={areGlobalAmountsHidden}
-        >
-            {areGlobalAmountsHidden ? <EyeSlashIcon className="w-5 h-5" /> : <EyeIcon className="w-5 h-5" />}
-        </button>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-        <div className="relative">
-          <label htmlFor="totalIncome" className="block text-sm font-medium text-slate-300 mb-1">
-            Total Monthly Income
-          </label>
-          <div className="relative">
-            <input
-              ref={incomeInputRef}
-              type={!isIncomeHidden || isIncomeInputFocused ? "number" : "password"}
-              id="totalIncome"
-              value={totalIncome === 0 ? '' : totalIncome.toString()}
-              onChange={handleIncomeChange}
-              onFocus={handleIncomeFocus}
-              onBlur={handleIncomeBlur}
-              className="w-full bg-slate-700 border border-slate-600 text-slate-100 rounded-md p-3 text-lg focus:ring-sky-500 focus:border-sky-500 transition"
-              placeholder="Enter your total income"
-            />
-            <button 
-              onClick={onToggleIncomeHidden}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-sky-400 transition-colors"
-              aria-label={isIncomeHidden ? "Show income" : "Hide income"}
-            >
-              {isIncomeHidden ? 
-                <EyeIcon className="w-5 h-5" /> : 
-                <EyeSlashIcon className="w-5 h-5" />
-              }
-            </button>
-          </div>
-        </div>
-        <div>
-          <label htmlFor="currencySelector" className="block text-sm font-medium text-slate-300 mb-1">
-            Currency
-          </label>
-          <select
-            id="currencySelector"
-            value={selectedCurrency}
-            onChange={(e) => onCurrencyChange(e.target.value)}
-            className="w-full bg-slate-700 border border-slate-600 text-slate-100 rounded-md p-3 text-lg focus:ring-sky-500 focus:border-sky-500 transition"
           >
-            {CURRENCIES.map(c => (
-              <option key={c.code} value={c.code}>{c.name} ({c.code})</option>
-            ))}
-          </select>
+            <span className="text-slate-300 text-sm font-medium">
+              {areGlobalAmountsHidden ? "Show" : "Hide"} Amounts
+            </span>
+            {areGlobalAmountsHidden ? <EyeIcon className="w-5 h-5 text-slate-400" /> : <EyeSlashIcon className="w-5 h-5 text-slate-400" />}
+          </button>
+        </div>
+
+        {/* Enhanced Input Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Income Input */}
+          <div className="bg-gradient-to-br from-slate-800 to-slate-700 p-6 rounded-2xl border border-slate-600">
+            <label htmlFor="totalIncome" className="block text-sm font-semibold text-slate-300 mb-3">
+              Monthly Income
+            </label>
+            <div className="relative">
+              <input
+                ref={incomeInputRef}
+                type={!isIncomeHidden || isIncomeInputFocused ? "number" : "password"}
+                id="totalIncome"
+                value={totalIncome === 0 ? '' : totalIncome.toString()}
+                onChange={handleIncomeChange}
+                onFocus={handleIncomeFocus}
+                onBlur={handleIncomeBlur}
+                className="w-full bg-slate-700 border border-slate-600 text-slate-100 rounded-xl px-4 py-3 text-lg font-semibold focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all duration-200 pr-12"
+                placeholder="Enter your monthly income"
+              />
+              <button 
+                onClick={onToggleIncomeHidden}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-sky-400 transition-colors p-1"
+                aria-label={isIncomeHidden ? "Show income" : "Hide income"}
+              >
+                {isIncomeHidden ? 
+                  <EyeIcon className="w-5 h-5" /> : 
+                  <EyeSlashIcon className="w-5 h-5" />
+                }
+              </button>
+            </div>
+          </div>
+
+          {/* Currency Selection */}
+          <div className="bg-gradient-to-br from-slate-800 to-slate-700 p-6 rounded-2xl border border-slate-600">
+            <label htmlFor="currencySelector" className="block text-sm font-semibold text-slate-300 mb-3">
+              Currency
+            </label>
+            <select
+              id="currencySelector"
+              value={selectedCurrency}
+              onChange={(e) => onCurrencyChange(e.target.value)}
+              className="w-full bg-slate-700 border border-slate-600 text-slate-100 rounded-xl px-4 py-3 text-lg font-semibold focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all duration-200"
+            >
+              {CURRENCIES.map(c => (
+                <option key={c.code} value={c.code}>{c.name} ({c.code})</option>
+              ))}
+            </select>
+          </div>
         </div>
       </div>
 
-      <div className="space-y-4">
-        <div className="flex justify-between items-center">
-          <span className="text-slate-300">Total Income:</span>
-          <span className="font-semibold text-lg text-emerald-400">
-            {!isIncomeHidden ? formatCurrency(totalIncome) : "•••••"}
-          </span>
-        </div>
-        <div className="flex justify-between items-center">
-          <span className="text-slate-300">Total Allocated:</span>
-          <span className={`font-semibold text-lg ${allocationExceedsIncome && !areGlobalAmountsHidden ? 'text-red-400' : 'text-sky-400'}`}>
-            {formatCurrency(totalAllocated)}
-          </span>
+      {/* Enhanced Budget Breakdown */}
+      <div className="bg-gradient-to-br from-slate-800 to-slate-700 p-8 rounded-2xl border border-slate-600">
+        <h3 className="text-xl font-bold text-white mb-6">Budget Breakdown</h3>
+        
+        <div className="space-y-6">
+          {/* Income Display */}
+          <div className="flex justify-between items-center p-4 bg-slate-700/50 rounded-xl">
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 bg-emerald-500/20 rounded-lg flex items-center justify-center">
+                <svg className="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                </svg>
+              </div>
+              <span className="text-slate-300 font-medium">Total Income:</span>
+            </div>
+            <span className="font-bold text-xl text-emerald-400">
+              {!isIncomeHidden ? formatCurrency(totalIncome) : "•••••"}
+            </span>
+          </div>
+
+          {/* Allocated Display */}
+          <div className="flex justify-between items-center p-4 bg-slate-700/50 rounded-xl">
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 bg-sky-500/20 rounded-lg flex items-center justify-center">
+                <svg className="w-5 h-5 text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
+              </div>
+              <span className="text-slate-300 font-medium">Total Allocated:</span>
+            </div>
+            <span className={`font-bold text-xl ${allocationExceedsIncome && !areGlobalAmountsHidden ? 'text-red-400' : 'text-sky-400'}`}>
+              {formatCurrency(totalAllocated)}
+            </span>
+          </div>
+
+          {/* Progress Bar */}
+          {!areGlobalAmountsHidden && totalIncome > 0 && (
+            <div className="p-4 bg-slate-700/50 rounded-xl">
+              <div className="flex justify-between items-center mb-3">
+                <span className="text-slate-300 font-medium">Allocation Progress</span>
+                <span className="text-sm text-slate-400">
+                  {((totalAllocated / totalIncome) * 100).toFixed(1)}%
+                </span>
+              </div>
+              <div className="w-full bg-slate-600 rounded-full h-3">
+                <div 
+                  className={`h-3 rounded-full transition-all duration-500 ${allocationExceedsIncome ? 'bg-red-500' : 'bg-sky-500'}`}
+                  style={{ width: `${Math.min((totalAllocated / totalIncome) * 100, 100)}%` }}
+                ></div>
+              </div>
+            </div>
+          )}
+
+          {areGlobalAmountsHidden && totalIncome > 0 && (
+            <div className="p-4 bg-slate-700/50 rounded-xl">
+              <div className="w-full bg-slate-600 rounded-full h-3 flex items-center justify-center">
+                <span className="text-xs text-slate-400 font-medium">Progress hidden</span>
+              </div>
+            </div>
+          )}
+
+          {/* Remaining Amount */}
+          <div className="flex justify-between items-center p-4 bg-slate-700/50 rounded-xl">
+            <div className="flex items-center space-x-3">
+              <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                unallocatedAmount < 0 ? 'bg-red-500/20' : 'bg-amber-500/20'
+              }`}>
+                <svg className={`w-5 h-5 ${unallocatedAmount < 0 ? 'text-red-400' : 'text-amber-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                </svg>
+              </div>
+              <span className="text-slate-300 font-medium">Remaining to Allocate:</span>
+            </div>
+            <span className={`font-bold text-xl ${unallocatedAmount < 0 && !areGlobalAmountsHidden ? 'text-red-400' : 'text-amber-400'}`}>
+              {formatCurrency(unallocatedAmount)}
+            </span>
+          </div>
         </div>
 
-        {!areGlobalAmountsHidden && totalIncome > 0 && (
-            <ProgressBar value={totalAllocated} max={totalIncome} colorClass={allocationExceedsIncome ? 'bg-red-500' : 'bg-sky-500'} heightClass="h-3"/>
-        )}
-        {areGlobalAmountsHidden && totalIncome > 0 && (
-             <div className="w-full bg-slate-700 rounded-full h-3 text-xs flex items-center justify-center text-slate-400">Progress hidden</div>
-        )}
-
-        <div className="flex justify-between items-center pt-1">
-          <span className="text-slate-300">Remaining to Allocate:</span>
-          <span className={`font-semibold text-lg ${unallocatedAmount < 0 && !areGlobalAmountsHidden ? 'text-red-400' : 'text-emerald-400'}`}>
-            {formatCurrency(unallocatedAmount)}
-          </span>
+        {/* Status Messages */}
+        <div className="mt-6">
+          {!areGlobalAmountsHidden && allocationExceedsIncome && (
+            <div className="p-4 bg-red-500/20 border border-red-500/30 rounded-xl text-red-300 text-sm">
+              <div className="flex items-start space-x-3">
+                <InfoIcon className="w-5 h-5 mt-0.5 flex-shrink-0 text-red-400" />
+                <div>
+                  <p className="font-semibold mb-1">Budget Over Limit</p>
+                  <p>Your total allocations exceed your income by {formatCurrency(Math.abs(unallocatedAmount))}. Consider adjusting your budget.</p>
+                </div>
+              </div>
+            </div>
+          )}
+          
+          {!areGlobalAmountsHidden && allocationMatchesIncome && totalIncome > 0 && (
+            <div className="p-4 bg-emerald-500/20 border border-emerald-500/30 rounded-xl text-emerald-300 text-sm">
+              <div className="flex items-start space-x-3">
+                <CheckCircleIcon className="w-5 h-5 mt-0.5 flex-shrink-0 text-emerald-400" />
+                <div>
+                  <p className="font-semibold mb-1">Perfect Allocation!</p>
+                  <p>Your budget is fully allocated. Great job managing your finances!</p>
+                </div>
+              </div>
+            </div>
+          )}
+          
+          {!areGlobalAmountsHidden && unallocatedAmount > 0 && totalIncome > 0 && (
+            <div className="p-4 bg-amber-500/20 border border-amber-500/30 rounded-xl text-amber-300 text-sm">
+              <div className="flex items-start space-x-3">
+                <InfoIcon className="w-5 h-5 mt-0.5 flex-shrink-0 text-amber-400" />
+                <div>
+                  <p className="font-semibold mb-1">Available Budget</p>
+                  <p>You have {formatCurrency(unallocatedAmount)} remaining to allocate to categories.</p>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
-
-        {!areGlobalAmountsHidden && allocationExceedsIncome && (
-          <div className="mt-3 p-3 bg-red-500/20 border border-red-500 rounded-md text-red-300 text-sm flex items-start space-x-2">
-            <InfoIcon className="w-5 h-5 mt-0.5 flex-shrink-0 text-red-400" />
-            <span>Warning: Your total allocations exceed your income by {formatCurrency(Math.abs(unallocatedAmount))}.</span>
-          </div>
-        )}
-        {!areGlobalAmountsHidden && allocationMatchesIncome && totalIncome > 0 && (
-           <div className="mt-3 p-3 bg-emerald-500/20 border border-emerald-500 rounded-md text-emerald-300 text-sm flex items-start space-x-2">
-            <CheckCircleIcon className="w-5 h-5 mt-0.5 flex-shrink-0 text-emerald-400" />
-            <span>Great! Your budget is fully allocated.</span>
-          </div>
-        )}
-         {!areGlobalAmountsHidden && unallocatedAmount > 0 && totalIncome > 0 && (
-           <div className="mt-3 p-3 bg-sky-500/20 border border-sky-500 rounded-md text-sky-300 text-sm flex items-start space-x-2">
-            <InfoIcon className="w-5 h-5 mt-0.5 flex-shrink-0 text-sky-400" />
-            <span>You have {formatCurrency(unallocatedAmount)} remaining to allocate.</span>
-          </div>
-        )}
       </div>
     </>
   );

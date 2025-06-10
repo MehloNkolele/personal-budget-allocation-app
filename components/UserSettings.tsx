@@ -259,10 +259,50 @@ const UserSettings: React.FC<UserSettingsProps> = ({ isOpen, onClose }) => {
             <div className="bg-slate-800/50 rounded-xl p-4 border border-slate-700 text-center">
                 <label className="block text-lg font-semibold text-slate-200 mb-3">Profile Picture</label>
                 <div className="flex flex-col items-center space-y-4">
-                    {profilePicture ? <img src={profilePicture} alt="Profile" className="w-24 h-24 rounded-full object-cover border-2 border-sky-500" /> : <div className="w-24 h-24 bg-slate-700 rounded-full flex items-center justify-center text-4xl font-bold text-sky-400 border-2 border-slate-600">{displayName?.charAt(0) || user?.email?.charAt(0) || 'U'}</div>}
+                    <div className="relative group">
+                        {profilePicture ? (
+                            <div className="relative">
+                                <img 
+                                    src={profilePicture} 
+                                    alt="Profile" 
+                                    className="w-32 h-32 rounded-3xl object-cover border-4 border-violet-500/30 shadow-2xl group-hover:shadow-violet-500/40 transition-all duration-500 group-hover:scale-105" 
+                                />
+                                <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-violet-400/20 via-sky-500/20 to-purple-600/20 opacity-0 group-hover:opacity-100 transition-all duration-500"></div>
+                                {/* Decorative elements */}
+                                <div className="absolute -top-2 -right-2 w-6 h-6 bg-gradient-to-br from-emerald-400 to-emerald-500 rounded-full border-2 border-slate-800 shadow-lg"></div>
+                                <div className="absolute -bottom-2 -left-2 w-4 h-4 bg-gradient-to-br from-sky-400 to-sky-500 rounded-full border-2 border-slate-800 shadow-lg"></div>
+                            </div>
+                        ) : (
+                            <div className="relative">
+                                <div className="w-32 h-32 bg-gradient-to-br from-violet-600 via-purple-600 to-fuchsia-700 rounded-3xl flex items-center justify-center text-6xl font-bold border-4 border-violet-500/30 shadow-2xl group-hover:shadow-violet-500/40 transition-all duration-500 group-hover:scale-105">
+                                    <span className="bg-gradient-to-br from-white via-slate-100 to-slate-200 bg-clip-text text-transparent drop-shadow-lg">
+                                        {displayName?.charAt(0) || user?.email?.charAt(0) || 'U'}
+                                    </span>
+                                </div>
+                                <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-violet-400/20 via-purple-500/15 to-fuchsia-600/20 opacity-0 group-hover:opacity-100 transition-all duration-500"></div>
+                                
+                                {/* Floating decorative elements */}
+                                <div className="absolute inset-0 pointer-events-none">
+                                    <div className="absolute top-2 right-4 w-2 h-2 bg-emerald-400 rounded-full animate-float opacity-0 group-hover:opacity-100 transition-opacity duration-500" style={{animationDelay: '0s', animationDuration: '3s'}}></div>
+                                    <div className="absolute bottom-4 left-2 w-1.5 h-1.5 bg-sky-400 rounded-full animate-float opacity-0 group-hover:opacity-100 transition-opacity duration-500" style={{animationDelay: '1s', animationDuration: '4s'}}></div>
+                                    <div className="absolute top-6 left-6 w-1 h-1 bg-purple-400 rounded-full animate-float opacity-0 group-hover:opacity-100 transition-opacity duration-500" style={{animationDelay: '2s', animationDuration: '5s'}}></div>
+                                </div>
+                                
+                                {/* Decorative corner elements */}
+                                <div className="absolute -top-2 -right-2 w-6 h-6 bg-gradient-to-br from-emerald-400 to-emerald-500 rounded-full border-2 border-slate-800 shadow-lg"></div>
+                                <div className="absolute -bottom-2 -left-2 w-4 h-4 bg-gradient-to-br from-sky-400 to-sky-500 rounded-full border-2 border-slate-800 shadow-lg"></div>
+                            </div>
+                        )}
+                    </div>
                     <div className="flex gap-4">
-                        <button type="button" onClick={() => fileInputRef.current?.click()} className="bg-sky-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-sky-700 transition">Change</button>
-                        {profilePicture && <button type="button" onClick={handleRemoveProfilePicture} className="bg-red-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-red-700 transition">Remove</button>}
+                        <button type="button" onClick={() => fileInputRef.current?.click()} className="bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white px-6 py-3 rounded-xl text-sm font-semibold transition-all duration-300 shadow-lg hover:shadow-violet-500/30 hover:scale-105">
+                            Change Photo
+                        </button>
+                        {profilePicture && (
+                            <button type="button" onClick={handleRemoveProfilePicture} className="bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700 text-white px-6 py-3 rounded-xl text-sm font-semibold transition-all duration-300 shadow-lg hover:shadow-red-500/30 hover:scale-105">
+                                Remove
+                            </button>
+                        )}
                     </div>
                     <input ref={fileInputRef} type="file" accept="image/*" onChange={handleProfilePictureChange} className="hidden" />
                 </div>
