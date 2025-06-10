@@ -244,7 +244,7 @@ const AppContent: React.FC = () => {
   return (
     <div className="h-screen bg-slate-900 text-white flex flex-col">
       <Navbar currentSection={currentSection} onSectionChange={handleSectionChange} onNewCategory={() => openModal({ type: 'addCategory' })} />
-      <main className={`flex-grow ${currentSection === 'savings' ? 'flex' : 'overflow-y-auto p-4 md:p-6 lg:p-8'}`}>
+      <main className={`flex-grow ${currentSection === 'savings' ? 'flex' : 'overflow-y-auto p-4 md:p-6 lg:p-8 pt-20'}`}>
         {renderCurrentSection()}
       </main>
       <Toaster />
