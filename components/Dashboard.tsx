@@ -7,6 +7,7 @@ interface DashboardProps {
   formatCurrency: (amount: number) => string;
   categories?: any[];
   onAddCategory?: () => void;
+  onNavigateToSection?: (section: 'categories' | 'reports' | 'planning' | 'history' | 'savings') => void;
 }
 
 const Dashboard: React.FC<DashboardProps> = ({
@@ -16,6 +17,7 @@ const Dashboard: React.FC<DashboardProps> = ({
   formatCurrency,
   categories = [],
   onAddCategory,
+  onNavigateToSection,
 }) => {
   const totalCategories = categories.length;
   const totalSubcategories = categories.reduce((sum, cat) => sum + cat.subcategories.length, 0);
@@ -35,6 +37,32 @@ const Dashboard: React.FC<DashboardProps> = ({
   const hasData = totalIncome > 0 || categories.length > 0;
   const completionRate = totalSubcategories > 0 ? (completedSubcategories / totalSubcategories) * 100 : 0;
 
+  // Smart currency formatting for responsive display
+  const formatCurrencyResponsive = (amount: number) => {
+    const formatted = formatCurrency(amount);
+    // For very large amounts, use abbreviations on smaller screens
+    if (Math.abs(amount) >= 1000000) {
+      const millions = amount / 1000000;
+      return {
+        full: formatted,
+        abbreviated: `${millions.toFixed(1)}M`,
+        shouldAbbreviate: true
+      };
+    } else if (Math.abs(amount) >= 1000) {
+      const thousands = amount / 1000;
+      return {
+        full: formatted,
+        abbreviated: `${thousands.toFixed(1)}K`,
+        shouldAbbreviate: true
+      };
+    }
+    return {
+      full: formatted,
+      abbreviated: formatted,
+      shouldAbbreviate: false
+    };
+  };
+
   return (
     <div className="space-y-8">
       {/* Welcome Header */}
@@ -45,8 +73,11 @@ const Dashboard: React.FC<DashboardProps> = ({
 
       {/* Enhanced Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
-        {/* Categories Card */}
-        <div className="bg-gradient-to-br from-slate-800 to-slate-700 p-6 rounded-2xl border border-slate-600 hover:border-sky-500 transition-all duration-300 group">
+        {/* Categories Card - Clickable */}
+        <button 
+          onClick={() => onNavigateToSection?.('categories')}
+          className="bg-gradient-to-br from-slate-800 to-slate-700 p-6 rounded-2xl border border-slate-600 hover:border-sky-500 transition-all duration-300 group text-left w-full focus:outline-none focus:ring-2 focus:ring-sky-500/50 transform hover:scale-105"
+        >
           <div className="flex items-center justify-between">
             <div>
               <p className="text-slate-400 text-sm font-medium mb-1">Active Categories</p>
@@ -62,10 +93,13 @@ const Dashboard: React.FC<DashboardProps> = ({
               </svg>
             </div>
           </div>
-        </div>
+        </button>
 
-        {/* Allocation Rate Card */}
-        <div className="bg-gradient-to-br from-slate-800 to-slate-700 p-6 rounded-2xl border border-slate-600 hover:border-emerald-500 transition-all duration-300 group">
+        {/* Reports Card - Clickable */}
+        <button
+          onClick={() => onNavigateToSection?.('reports')}
+          className="bg-gradient-to-br from-slate-800 to-slate-700 p-6 rounded-2xl border border-slate-600 hover:border-emerald-500 transition-all duration-300 group text-left w-full focus:outline-none focus:ring-2 focus:ring-emerald-500/50 transform hover:scale-105"
+        >
           <div className="flex items-center justify-between">
             <div>
               <p className="text-slate-400 text-sm font-medium mb-1">Allocation Rate</p>
@@ -83,10 +117,13 @@ const Dashboard: React.FC<DashboardProps> = ({
               </svg>
             </div>
           </div>
-        </div>
+        </button>
 
-        {/* Task Completion Card */}
-        <div className="bg-gradient-to-br from-slate-800 to-slate-700 p-6 rounded-2xl border border-slate-600 hover:border-purple-500 transition-all duration-300 group">
+        {/* Planning Card - Clickable */}
+        <button
+          onClick={() => onNavigateToSection?.('planning')}
+          className="bg-gradient-to-br from-slate-800 to-slate-700 p-6 rounded-2xl border border-slate-600 hover:border-purple-500 transition-all duration-300 group text-left w-full focus:outline-none focus:ring-2 focus:ring-purple-500/50 transform hover:scale-105"
+        >
           <div className="flex items-center justify-between">
             <div>
               <p className="text-slate-400 text-sm font-medium mb-1">Task Progress</p>
@@ -102,10 +139,13 @@ const Dashboard: React.FC<DashboardProps> = ({
               </svg>
             </div>
           </div>
-        </div>
+        </button>
 
-        {/* Savings Rate Card */}
-        <div className="bg-gradient-to-br from-slate-800 to-slate-700 p-6 rounded-2xl border border-slate-600 hover:border-amber-500 transition-all duration-300 group">
+        {/* Savings Calculator Card - Clickable */}
+        <button
+          onClick={() => onNavigateToSection?.('savings')}
+          className="bg-gradient-to-br from-slate-800 to-slate-700 p-6 rounded-2xl border border-slate-600 hover:border-amber-500 transition-all duration-300 group text-left w-full focus:outline-none focus:ring-2 focus:ring-amber-500/50 transform hover:scale-105"
+        >
           <div className="flex items-center justify-between">
             <div>
               <p className="text-slate-400 text-sm font-medium mb-1">Savings Potential</p>
@@ -121,7 +161,7 @@ const Dashboard: React.FC<DashboardProps> = ({
               </svg>
             </div>
           </div>
-        </div>
+        </button>
       </div>
 
       {/* Enhanced Content Section */}
@@ -131,9 +171,20 @@ const Dashboard: React.FC<DashboardProps> = ({
           <div className="xl:col-span-2 bg-gradient-to-br from-slate-800 to-slate-700 p-8 rounded-2xl border border-slate-600">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-2xl font-bold text-white">Top Categories</h3>
-              <div className="flex items-center text-sm text-slate-400">
-                <div className="w-2 h-2 bg-sky-400 rounded-full mr-2"></div>
-                Budget allocation breakdown
+              <div className="flex items-center space-x-4">
+                <div className="flex items-center text-sm text-slate-400">
+                  <div className="w-2 h-2 bg-sky-400 rounded-full mr-2"></div>
+                  Budget allocation breakdown
+                </div>
+                <button
+                  onClick={() => onNavigateToSection?.('categories')}
+                  className="text-sky-400 hover:text-sky-300 text-sm font-medium transition-colors duration-200 flex items-center space-x-1 group"
+                >
+                  <span>View All</span>
+                  <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
               </div>
             </div>
             <div className="space-y-6">
@@ -143,21 +194,28 @@ const Dashboard: React.FC<DashboardProps> = ({
                 const bgColors = ['bg-sky-500/20', 'bg-emerald-500/20', 'bg-purple-500/20'];
                 
                 return (
-                  <div key={cat.id} className="flex items-center justify-between p-4 bg-slate-700/50 rounded-xl hover:bg-slate-700/70 transition-colors">
-                    <div className="flex items-center space-x-4">
-                      <div className={`w-12 h-12 ${bgColors[index]} rounded-xl flex items-center justify-center`}>
+                  <button
+                    key={cat.id}
+                    onClick={() => onNavigateToSection?.('categories')}
+                    className="w-full flex items-center justify-between p-4 bg-slate-700/50 rounded-xl hover:bg-slate-700/70 transition-all duration-200 group text-left focus:outline-none focus:ring-2 focus:ring-sky-500/50 min-w-0"
+                  >
+                    <div className="flex items-center space-x-4 min-w-0 flex-1">
+                      <div className={`w-10 h-10 sm:w-12 sm:h-12 ${bgColors[index]} rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-200 flex-shrink-0`}>
                         <div className={`w-3 h-3 ${colors[index]} rounded-full`}></div>
                       </div>
-                      <div>
-                        <p className="text-white font-semibold text-lg">{cat.name}</p>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-white font-semibold text-base sm:text-lg truncate">{cat.name}</p>
                         <p className="text-slate-400 text-sm">{percentage.toFixed(1)}% of budget</p>
                       </div>
                     </div>
-                    <div className="text-right">
-                      <p className="text-sky-400 font-bold text-xl">{formatCurrency(cat.allocatedAmount)}</p>
+                    <div className="text-right flex-shrink-0 min-w-0">
+                      <p className="text-sky-400 font-bold text-lg sm:text-xl">
+                        <span className="hidden sm:inline">{formatCurrencyResponsive(cat.allocatedAmount).full}</span>
+                        <span className="sm:hidden">{formatCurrencyResponsive(cat.allocatedAmount).abbreviated}</span>
+                      </p>
                       <p className="text-slate-500 text-sm">{cat.subcategories?.length || 0} items</p>
                     </div>
-                  </div>
+                  </button>
                 );
               })}
             </div>
@@ -166,7 +224,18 @@ const Dashboard: React.FC<DashboardProps> = ({
 
         {/* Quick Insights Summary */}
         <div className="bg-gradient-to-br from-slate-800 to-slate-700 p-8 rounded-2xl border border-slate-600">
-          <h3 className="text-2xl font-bold text-white mb-6">Quick Insights</h3>
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-2xl font-bold text-white">Quick Insights</h3>
+            <button
+              onClick={() => onNavigateToSection?.('history')}
+              className="text-slate-400 hover:text-sky-400 text-sm font-medium transition-colors duration-200 flex items-center space-x-1 group"
+            >
+              <span>View History</span>
+              <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+          </div>
           
           {hasData ? (
             <div className="space-y-6">

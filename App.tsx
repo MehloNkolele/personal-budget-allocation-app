@@ -234,6 +234,7 @@ const AppContent: React.FC = () => {
           formatCurrency={formatCurrency} 
           categories={categories} 
           onAddCategory={() => openModal({ type: 'addCategory' })}
+          onNavigateToSection={handleSectionChange}
         />;
     }
   };
