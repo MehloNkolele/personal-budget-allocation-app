@@ -72,15 +72,15 @@ const UserDropdown: React.FC<UserDropdownProps> = ({ user }) => {
           aria-label="User menu"
         >
           {/* Enhanced User Avatar */}
-          <div className="relative">
+          <div className="relative flex-shrink-0">
             {user.photoURL ? (
               <img
                 src={user.photoURL}
                 alt="Profile"
-                className="w-9 h-9 rounded-full ring-2 ring-slate-600 group-hover:ring-sky-500 transition-all duration-300 object-cover"
+                className="w-9 h-9 rounded-full ring-2 ring-slate-600 group-hover:ring-sky-500 transition-all duration-300 object-cover flex-shrink-0 aspect-square"
               />
             ) : (
-              <div className="w-9 h-9 bg-gradient-to-br from-sky-500 to-sky-600 rounded-full flex items-center justify-center ring-2 ring-slate-600 group-hover:ring-sky-500 transition-all duration-300 shadow-lg">
+              <div className="w-9 h-9 bg-gradient-to-br from-sky-500 to-sky-600 rounded-full flex items-center justify-center ring-2 ring-slate-600 group-hover:ring-sky-500 transition-all duration-300 shadow-lg flex-shrink-0 aspect-square">
                 <span className="text-white font-semibold text-sm">
                   {user.displayName?.charAt(0) || user.email?.charAt(0) || 'U'}
                 </span>

@@ -44,10 +44,10 @@ const AppContent: React.FC = () => {
     };
     window.addEventListener('beforeunload', handleAppClose);
     return () => window.removeEventListener('beforeunload', handleAppClose);
-  }, [user?.uid]);
+  }, [user]);
 
   useEffect(() => {
-    if (user?.uid) {
+    if (user) {
       try {
         const migrationSuccessful = UserDataManager.migrateGlobalDataToUser(user.uid);
         if (migrationSuccessful) addToast('Your existing data has been migrated to your personal account!', 'success');
@@ -75,9 +75,13 @@ const AppContent: React.FC = () => {
       setMonthlyBudgets([]);
       setIsDataLoaded(false);
     }
-  }, [user?.uid, addToast]);
+  }, [user, addToast]);
   
-  useEffect(() => { if (user?.uid && isDataLoaded) UserDataManager.saveUserData(user.uid, { totalIncome, categories, transactions, selectedCurrency, areGlobalAmountsHidden, isIncomeHidden, monthlyBudgets }); }, [user?.uid, isDataLoaded, totalIncome, categories, transactions, selectedCurrency, areGlobalAmountsHidden, isIncomeHidden, monthlyBudgets]);
+  useEffect(() => { 
+    if (user && isDataLoaded) {
+      UserDataManager.saveUserData(user.uid, { totalIncome, categories, transactions, selectedCurrency, areGlobalAmountsHidden, isIncomeHidden, monthlyBudgets }); 
+    }
+  }, [user, isDataLoaded, totalIncome, categories, transactions, selectedCurrency, areGlobalAmountsHidden, isIncomeHidden, monthlyBudgets]);
   useEffect(() => { if (categories.length > 0 || transactions.length > 0) generateBudgetNotifications(categories, transactions, totalIncome); }, [categories, transactions, totalIncome, generateBudgetNotifications]);
 
   const handleSectionChange = useCallback((section: 'dashboard' | 'categories' | 'reports' | 'planning' | 'history' | 'savings') => setCurrentSection(section), []);
@@ -208,7 +212,7 @@ const AppContent: React.FC = () => {
           areGlobalAmountsHidden={areGlobalAmountsHidden} 
         />;
       case 'reports': return <Reports categories={categories} transactions={transactions} totalIncome={totalIncome} formatCurrency={formatCurrency} selectedCurrency={selectedCurrency} />;
-      case 'planning': return <BudgetPlanning monthlyBudgets={monthlyBudgets} onMonthlyBudgetsChange={setMonthlyBudgets} currentCategories={categories} currentIncome={totalIncome} formatCurrency={formatCurrency} selectedCurrency={selectedCurrency} userId={user?.uid || ''} />;
+      case 'planning': return <BudgetPlanning monthlyBudgets={monthlyBudgets} onMonthlyBudgetsChange={setMonthlyBudgets} currentCategories={categories} currentIncome={totalIncome} formatCurrency={formatCurrency} selectedCurrency={selectedCurrency} userId={user?.uid ?? ''} />;
       case 'history': return <BudgetHistory monthlyBudgets={monthlyBudgets} allTransactions={transactions} formatCurrency={formatCurrency} selectedCurrency={selectedCurrency} />;
       case 'savings': return <SavingsCalculator />;
       default: return <Dashboard totalIncome={totalIncome} onTotalIncomeChange={handleTotalIncomeChange} totalAllocated={totalAllocated} unallocatedAmount={unallocatedAmount} selectedCurrency={selectedCurrency} onCurrencyChange={handleCurrencyChange} areGlobalAmountsHidden={areGlobalAmountsHidden} onToggleGlobalAmountsHidden={toggleGlobalAmountsHidden} formatCurrency={formatCurrencyWithVisibility} categories={categories} onAddCategory={() => openModal({ type: 'addCategory' })} isIncomeHidden={isIncomeHidden} onToggleIncomeHidden={toggleIncomeHidden} />;
@@ -238,9 +242,9 @@ const AppContent: React.FC = () => {
   }, [modalState, categories, addSubcategory, editSubcategory, closeModal, selectedCurrency]);
   
   return (
-    <div className="min-h-screen bg-slate-900 text-white">
+    <div className="h-screen bg-slate-900 text-white flex flex-col">
       <Navbar currentSection={currentSection} onSectionChange={handleSectionChange} onNewCategory={() => openModal({ type: 'addCategory' })} />
-      <main className="p-4 md:p-6 lg:p-8">
+      <main className={`flex-grow ${currentSection === 'savings' ? 'flex' : 'overflow-y-auto p-4 md:p-6 lg:p-8'}`}>
         {renderCurrentSection()}
       </main>
       <Toaster />

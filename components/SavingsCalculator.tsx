@@ -176,7 +176,7 @@ const SavingsCalculator: React.FC = () => {
     };
 
     return (
-        <div className="w-full min-h-screen bg-slate-900 text-white flex flex-col items-center justify-center font-sans p-4">
+        <div className="w-full flex-grow bg-slate-900 text-white flex flex-col items-center justify-center font-sans p-4">
             <div className="w-full max-w-md">
                 <AnimatePresence mode="wait">
                     {step === 'initial' && (

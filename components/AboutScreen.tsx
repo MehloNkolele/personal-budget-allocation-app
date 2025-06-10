@@ -47,8 +47,8 @@ const AboutScreen: React.FC<AboutScreenProps> = ({ onClose }) => {
       variants={aboutVariants}
       className="fixed inset-0 bg-slate-900/80 backdrop-blur-lg flex items-center justify-center p-4 z-50"
     >
-      <div className="w-full max-w-4xl bg-slate-800/50 rounded-2xl border border-slate-700 shadow-2xl shadow-sky-900/20 overflow-hidden">
-        <header className="p-6 flex items-center justify-between border-b border-slate-700">
+      <div className="w-full max-w-4xl h-full sm:h-auto sm:max-h-[90vh] bg-slate-800/50 rounded-2xl border border-slate-700 shadow-2xl shadow-sky-900/20 flex flex-col overflow-hidden">
+        <header className="p-6 flex items-center justify-between border-b border-slate-700 flex-shrink-0">
           <motion.div variants={itemVariants} className="flex items-center gap-4">
             <InfoIcon className="w-8 h-8 text-sky-400" />
             <div>
@@ -66,7 +66,7 @@ const AboutScreen: React.FC<AboutScreenProps> = ({ onClose }) => {
           </motion.button>
         </header>
 
-        <div className="p-8 grid md:grid-cols-2 gap-8">
+        <div className="p-8 grid md:grid-cols-2 gap-8 overflow-y-auto flex-grow">
             {/* Left side: App Info */}
             <motion.div variants={itemVariants} className="space-y-6">
                 <h2 className="text-xl font-semibold text-white border-b border-slate-700 pb-2">App Information</h2>
@@ -111,7 +111,7 @@ const AboutScreen: React.FC<AboutScreenProps> = ({ onClose }) => {
             </motion.div>
         </div>
         
-        <footer className="p-4 text-center text-xs text-slate-500 border-t border-slate-700 bg-slate-900/50">
+        <footer className="p-4 text-center text-xs text-slate-500 border-t border-slate-700 bg-slate-900/50 flex-shrink-0">
           &copy; {new Date().getFullYear()} Bennet Nkolele. All rights reserved.
         </footer>
       </div>

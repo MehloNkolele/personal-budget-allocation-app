@@ -94,6 +94,17 @@ const UserSettings: React.FC<UserSettingsProps> = ({ isOpen, onClose }) => {
     const [isUpdatingSecurity, setIsUpdatingSecurity] = useState(false);
   
     useEffect(() => {
+      if (isOpen) {
+        document.body.style.overflow = 'hidden';
+      } else {
+        document.body.style.overflow = 'unset';
+      }
+      return () => {
+        document.body.style.overflow = 'unset';
+      };
+    }, [isOpen]);
+
+    useEffect(() => {
       if (user?.uid) {
         const preferences = UserDataManager.loadUserPreferences(user.uid);
         setShowSplashScreen(preferences.showSplashScreen);
