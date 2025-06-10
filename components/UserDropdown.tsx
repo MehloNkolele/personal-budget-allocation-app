@@ -148,14 +148,6 @@ const UserDropdown: React.FC<UserDropdownProps> = ({ user }) => {
                 <span>Account Settings</span>
               </button>
 
-              <button
-                onClick={() => {/* Add profile view functionality */}}
-                className="w-full flex items-center space-x-3 px-4 py-2 text-sm text-slate-300 hover:text-white hover:bg-slate-700/50 transition-colors duration-200"
-              >
-                <UserIcon className="w-4 h-4" />
-                <span>View Profile</span>
-              </button>
-
               <div className="border-t border-slate-700/50 my-1"></div>
 
               <button
