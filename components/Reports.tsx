@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Category, Transaction, ReportDateRange, CategorySpendingData } from '../types';
 import {
   ChartBarIcon,
@@ -8,7 +8,9 @@ import {
   CurrencyDollarIcon,
   TrendingUpIcon,
   TrendingDownIcon,
-  ExclamationTriangleIcon
+  ExclamationTriangleIcon,
+  EyeIcon,
+  LightBulbIcon
 } from '../constants';
 import {
   PieChart,
@@ -54,6 +56,13 @@ const CHART_COLORS = [
   '#eab308'  // yellow-500
 ];
 
+const reportTypes = [
+  { id: 'overview', name: 'Financial Overview', icon: EyeIcon },
+  { id: 'categories', name: 'Category Analysis', icon: ChartBarIcon },
+  { id: 'trends', name: 'Spending Trends', icon: TrendingUpIcon },
+  { id: 'insights', name: 'Financial Insights', icon: LightBulbIcon }
+];
+
 const Reports: React.FC<ReportsProps> = ({
   categories,
   transactions,
@@ -62,9 +71,7 @@ const Reports: React.FC<ReportsProps> = ({
   selectedCurrency
 }) => {
   const [selectedPeriod, setSelectedPeriod] = useState<'week' | 'month' | 'quarter' | 'year'>('month');
-  const [selectedReportType, setSelectedReportType] = useState<'overview' | 'categories' | 'trends' | 'insights'>('overview');
-
-  const reportTypes = ['overview', 'categories', 'trends', 'insights'];
+  const [selectedReportType, setSelectedReportType] = useState<string>('overview');
 
   // Calculate date range based on selected period
   const dateRange = useMemo((): ReportDateRange => {
@@ -251,541 +258,254 @@ const Reports: React.FC<ReportsProps> = ({
     return null;
   };
 
+  const renderNoData = (message: string) => (
+    <div className="flex flex-col items-center justify-center h-64 bg-slate-800/50 rounded-2xl">
+      <ExclamationTriangleIcon className="w-12 h-12 text-slate-600 mb-4" />
+      <h3 className="text-lg font-semibold text-slate-300">No Data Available</h3>
+      <p className="text-slate-400">{message}</p>
+    </div>
+  );
+
+  const ReportCard: React.FC<{title: string, children: React.ReactNode, icon?: React.ElementType}> = ({ title, children, icon: Icon }) => (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, ease: 'easeOut' }}
+      className="bg-slate-800/50 rounded-2xl border border-slate-700 overflow-hidden"
+    >
+      <div className="p-5 border-b border-slate-700 flex items-center gap-3">
+        {Icon && <Icon className="w-6 h-6 text-sky-400" />}
+        <h3 className="text-lg font-bold text-white">{title}</h3>
+      </div>
+      <div className="p-5">{children}</div>
+    </motion.div>
+  );
+
   const renderOverview = () => (
-    <div className="space-y-6">
-      {/* Enhanced Summary Cards with Mini Charts */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-slate-800 p-6 rounded-lg border border-slate-700 hover:border-slate-600 transition-colors">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-slate-400 text-sm">Total Spent</p>
-              <p className="text-2xl font-bold text-red-400">{formatCurrency(totals.totalSpent)}</p>
-              <p className="text-xs text-slate-500 mt-1">{totals.transactionCount} transactions</p>
-            </div>
-            <div className="w-12 h-12 rounded-full bg-red-500/20 flex items-center justify-center">
-              <TrendingDownIcon className="w-6 h-6 text-red-400" />
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-slate-800 p-6 rounded-lg border border-slate-700 hover:border-slate-600 transition-colors">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-slate-400 text-sm">Total Allocated</p>
-              <p className="text-2xl font-bold text-sky-400">{formatCurrency(totals.totalAllocated)}</p>
-              <p className="text-xs text-slate-500 mt-1">{categories.length} categories</p>
-            </div>
-            <div className="w-12 h-12 rounded-full bg-sky-500/20 flex items-center justify-center">
-              <CurrencyDollarIcon className="w-6 h-6 text-sky-400" />
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-slate-800 p-6 rounded-lg border border-slate-700 hover:border-slate-600 transition-colors">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-slate-400 text-sm">Remaining</p>
-              <p className={`text-2xl font-bold ${totals.totalRemaining >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-                {formatCurrency(totals.totalRemaining)}
-              </p>
-              <p className="text-xs text-slate-500 mt-1">
-                {totals.totalAllocated > 0 ? ((totals.totalRemaining / totals.totalAllocated) * 100).toFixed(1) : '0'}% of budget
-              </p>
-            </div>
-            <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
-              totals.totalRemaining >= 0 ? 'bg-emerald-500/20' : 'bg-red-500/20'
-            }`}>
-              <TrendingUpIcon className={`w-6 h-6 ${totals.totalRemaining >= 0 ? 'text-emerald-400' : 'text-red-400'}`} />
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-slate-800 p-6 rounded-lg border border-slate-700 hover:border-slate-600 transition-colors">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-slate-400 text-sm">Savings Rate</p>
-              <p className={`text-2xl font-bold ${
-                totals.savingsRate > 20 ? 'text-emerald-400' :
-                totals.savingsRate > 10 ? 'text-amber-400' : 'text-red-400'
-              }`}>
-                {totals.savingsRate.toFixed(1)}%
-              </p>
-              <p className="text-xs text-slate-500 mt-1">
-                {totals.savingsRate > 20 ? 'Excellent!' : totals.savingsRate > 10 ? 'Good' : 'Needs improvement'}
-              </p>
-            </div>
-            <div className="w-12 h-12">
-              <ResponsiveContainer width="100%" height="100%">
-                <RadialBarChart data={savingsRateData}>
-                  <RadialBar
-                    dataKey="value"
-                    cornerRadius={10}
-                    fill={savingsRateData[0]?.fill}
-                    background={{ fill: '#334155' }}
-                  />
-                </RadialBarChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Charts Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Spending Distribution Pie Chart */}
-        <div className="bg-slate-800 p-6 rounded-lg border border-slate-700">
-          <h3 className="text-xl font-semibold text-sky-400 mb-4">Spending Distribution</h3>
+    <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-6">
+      <StatCard title="Total Spent" value={formatCurrency(totals.totalSpent)} icon={TrendingDownIcon} color="text-red-400" />
+      <StatCard title="Total Allocated" value={formatCurrency(totals.totalAllocated)} icon={CurrencyDollarIcon} color="text-sky-400" />
+      <StatCard title="Savings Rate" value={`${totals.savingsRate.toFixed(1)}%`} icon={TrendingUpIcon} color="text-emerald-400" />
+      <StatCard title="Transactions" value={totals.transactionCount.toString()} icon={ChartBarIcon} color="text-amber-400" />
+      
+      <div className="lg:col-span-2 xl:col-span-4">
+        <ReportCard title="Spending by Category" icon={ChartBarIcon}>
           {pieChartData.length > 0 ? (
-            <div className="h-80">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={pieChartData}
-                    cx="50%"
-                    cy="50%"
-                    labelLine={false}
-                    label={({ name, percentage }) => `${name}: ${percentage}%`}
-                    outerRadius={80}
-                    fill="#8884d8"
-                    dataKey="value"
-                  >
-                    {pieChartData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip content={<PieTooltip />} />
-                  <Legend />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-          ) : (
-            <div className="h-80 flex items-center justify-center">
-              <div className="text-center">
-                <ChartBarIcon className="w-16 h-16 text-slate-600 mx-auto mb-4" />
-                <p className="text-slate-400">No spending data available</p>
-                <p className="text-sm text-slate-500 mt-2">Add some transactions to see the distribution</p>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Budget vs Actual Bar Chart */}
-        <div className="bg-slate-800 p-6 rounded-lg border border-slate-700">
-          <h3 className="text-xl font-semibold text-sky-400 mb-4">Budget vs Actual Spending</h3>
-          {barChartData.length > 0 ? (
-            <div className="h-80">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={barChartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#475569" />
-                  <XAxis
-                    dataKey="name"
-                    stroke="#94a3b8"
-                    fontSize={12}
-                    angle={-45}
-                    textAnchor="end"
-                    height={80}
-                  />
-                  <YAxis stroke="#94a3b8" fontSize={12} />
-                  <Tooltip content={<CustomTooltip />} />
-                  <Legend />
-                  <Bar dataKey="allocated" fill="#0ea5e9" name="Allocated" radius={[2, 2, 0, 0]} />
-                  <Bar dataKey="spent" fill="#ef4444" name="Spent" radius={[2, 2, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          ) : (
-            <div className="h-80 flex items-center justify-center">
-              <div className="text-center">
-                <ChartBarIcon className="w-16 h-16 text-slate-600 mx-auto mb-4" />
-                <p className="text-slate-400">No budget data available</p>
-                <p className="text-sm text-slate-500 mt-2">Create categories to see budget comparison</p>
-              </div>
-            </div>
-          )}
-        </div>
+            <ResponsiveContainer width="100%" height={300}>
+              <PieChart>
+                <Pie data={pieChartData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={120} labelLine={false} label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}>
+                  {pieChartData.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.color} />)}
+                </Pie>
+                <Tooltip content={<PieTooltip />} />
+              </PieChart>
+            </ResponsiveContainer>
+          ) : renderNoData("No spending recorded for this period.")}
+        </ReportCard>
       </div>
     </div>
   );
-
-  const renderCategories = () => (
-    <div className="space-y-6">
-      {/* Category Performance Chart */}
-      <div className="bg-slate-800 p-6 rounded-lg border border-slate-700">
-        <h3 className="text-xl font-semibold text-sky-400 mb-4">Category Performance</h3>
-        {spendingData.length > 0 ? (
-          <div className="h-96">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={spendingData} margin={{ top: 20, right: 30, left: 20, bottom: 80 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#475569" />
-                <XAxis
-                  dataKey="categoryName"
-                  stroke="#94a3b8"
-                  fontSize={11}
-                  angle={-45}
-                  textAnchor="end"
-                  height={100}
-                />
-                <YAxis stroke="#94a3b8" fontSize={12} />
-                <Tooltip content={<CustomTooltip />} />
-                <Legend />
-                <Bar dataKey="allocated" fill="#0ea5e9" name="Allocated" radius={[2, 2, 0, 0]} />
-                <Bar dataKey="spent" fill="#ef4444" name="Spent" radius={[2, 2, 0, 0]} />
-                <Bar dataKey="remaining" fill="#10b981" name="Remaining" radius={[2, 2, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        ) : (
-          <div className="h-96 flex items-center justify-center">
-            <div className="text-center">
-              <ChartBarIcon className="w-16 h-16 text-slate-600 mx-auto mb-4" />
-              <p className="text-slate-400">No categories available</p>
-              <p className="text-sm text-slate-500 mt-2">Create budget categories to see performance</p>
+  
+  const StatCard = ({ title, value, icon: Icon, color }: { title: string; value: string; icon: React.ElementType; color: string; }) => (
+     <div className="bg-slate-800/50 p-6 rounded-2xl border border-slate-700 flex flex-col justify-between">
+        <div>
+            <div className="flex items-center justify-between mb-4">
+                <p className="text-slate-400">{title}</p>
+                <Icon className={`w-6 h-6 ${color}`} />
             </div>
-          </div>
-        )}
-      </div>
-
-      {/* Detailed Category Table */}
-      <div className="bg-slate-800 p-6 rounded-lg border border-slate-700">
-        <h3 className="text-xl font-semibold text-sky-400 mb-4">Detailed Breakdown</h3>
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-slate-700">
-                <th className="text-left py-3 px-4 text-slate-300">Category</th>
-                <th className="text-right py-3 px-4 text-slate-300">Allocated</th>
-                <th className="text-right py-3 px-4 text-slate-300">Spent</th>
-                <th className="text-right py-3 px-4 text-slate-300">Remaining</th>
-                <th className="text-right py-3 px-4 text-slate-300">Usage %</th>
-                <th className="text-center py-3 px-4 text-slate-300">Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {spendingData.map((category, index) => (
-                <tr key={category.categoryId} className="border-b border-slate-700/50 hover:bg-slate-700/30 transition-colors">
-                  <td className="py-3 px-4">
-                    <div className="flex items-center space-x-3">
-                      <div
-                        className="w-4 h-4 rounded-full"
-                        style={{ backgroundColor: CHART_COLORS[index % CHART_COLORS.length] }}
-                      />
-                      <span className="text-slate-200 font-medium">{category.categoryName}</span>
-                    </div>
-                  </td>
-                  <td className="py-3 px-4 text-right text-slate-300">{formatCurrency(category.allocated)}</td>
-                  <td className="py-3 px-4 text-right text-red-400">{formatCurrency(category.spent)}</td>
-                  <td className={`py-3 px-4 text-right ${category.remaining >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-                    {formatCurrency(category.remaining)}
-                  </td>
-                  <td className={`py-3 px-4 text-right font-medium ${category.percentage > 100 ? 'text-red-400' : 'text-emerald-400'}`}>
-                    {category.percentage.toFixed(1)}%
-                  </td>
-                  <td className="py-3 px-4 text-center">
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      category.percentage > 100 ? 'bg-red-500/20 text-red-400' :
-                      category.percentage > 80 ? 'bg-amber-500/20 text-amber-400' :
-                      'bg-emerald-500/20 text-emerald-400'
-                    }`}>
-                      {category.percentage > 100 ? 'Over Budget' :
-                       category.percentage > 80 ? 'High Usage' : 'On Track'}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+            <p className={`text-3xl font-bold text-white ${color}`}>{value}</p>
         </div>
-      </div>
     </div>
   );
 
-  const renderTrends = () => (
-    <div className="space-y-6">
-      {/* Monthly Spending Trends */}
-      <div className="bg-slate-800 p-6 rounded-lg border border-slate-700">
-        <h3 className="text-xl font-semibold text-sky-400 mb-4">Monthly Spending Trends</h3>
-        {trendData.length > 0 && trendData.some(d => d.spent > 0 || d.income > 0) ? (
-          <div className="h-80">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={trendData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#475569" />
-                <XAxis dataKey="month" stroke="#94a3b8" fontSize={12} />
-                <YAxis stroke="#94a3b8" fontSize={12} />
-                <Tooltip content={<CustomTooltip />} />
-                <Legend />
-                <Line
-                  type="monotone"
-                  dataKey="spent"
-                  stroke="#ef4444"
-                  strokeWidth={3}
-                  name="Spent"
-                  dot={{ fill: '#ef4444', strokeWidth: 2, r: 4 }}
-                  activeDot={{ r: 6 }}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="income"
-                  stroke="#10b981"
-                  strokeWidth={3}
-                  name="Income"
-                  dot={{ fill: '#10b981', strokeWidth: 2, r: 4 }}
-                  activeDot={{ r: 6 }}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="savings"
-                  stroke="#0ea5e9"
-                  strokeWidth={3}
-                  name="Savings"
-                  dot={{ fill: '#0ea5e9', strokeWidth: 2, r: 4 }}
-                  activeDot={{ r: 6 }}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-        ) : (
-          <div className="h-80 flex items-center justify-center">
-            <div className="text-center">
-              <ChartBarIcon className="w-16 h-16 text-slate-600 mx-auto mb-4" />
-              <p className="text-slate-400">No trend data available</p>
-              <p className="text-sm text-slate-500 mt-2">Add transactions over multiple months to see trends</p>
-            </div>
-          </div>
-        )}
-      </div>
 
-      {/* Spending Pattern Area Chart */}
-      <div className="bg-slate-800 p-6 rounded-lg border border-slate-700">
-        <h3 className="text-xl font-semibold text-sky-400 mb-4">Spending Pattern</h3>
-        {trendData.length > 0 && trendData.some(d => d.spent > 0) ? (
-          <div className="h-80">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={trendData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#475569" />
-                <XAxis dataKey="month" stroke="#94a3b8" fontSize={12} />
-                <YAxis stroke="#94a3b8" fontSize={12} />
-                <Tooltip content={<CustomTooltip />} />
-                <Legend />
-                <Area
-                  type="monotone"
-                  dataKey="spent"
-                  stackId="1"
-                  stroke="#ef4444"
-                  fill="#ef4444"
-                  fillOpacity={0.6}
-                  name="Spent"
-                />
-                <Area
-                  type="monotone"
-                  dataKey="savings"
-                  stackId="1"
-                  stroke="#10b981"
-                  fill="#10b981"
-                  fillOpacity={0.6}
-                  name="Savings"
-                />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
-        ) : (
-          <div className="h-80 flex items-center justify-center">
-            <div className="text-center">
-              <ChartBarIcon className="w-16 h-16 text-slate-600 mx-auto mb-4" />
-              <p className="text-slate-400">No spending pattern data</p>
-              <p className="text-sm text-slate-500 mt-2">Track expenses over time to see patterns</p>
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-
-  const renderInsights = () => {
-    const insights = [];
-
-    // Generate insights based on data
-    if (totals.savingsRate > 20) {
-      insights.push({
-        type: 'positive',
-        icon: '🎉',
-        title: 'Excellent Savings!',
-        message: `You're saving ${totals.savingsRate.toFixed(1)}% of your income. Keep up the great work!`
-      });
-    } else if (totals.savingsRate < 5) {
-      insights.push({
-        type: 'warning',
-        icon: '⚠️',
-        title: 'Low Savings Rate',
-        message: `Only ${totals.savingsRate.toFixed(1)}% savings rate. Consider reducing expenses or increasing income.`
-      });
-    } else {
-      insights.push({
-        type: 'info',
-        icon: '💡',
-        title: 'Good Progress',
-        message: `${totals.savingsRate.toFixed(1)}% savings rate is decent. Try to reach 20% for excellent financial health.`
-      });
-    }
-
-    const overBudgetCategories = spendingData.filter(cat => cat.percentage > 100);
-    if (overBudgetCategories.length > 0) {
-      insights.push({
-        type: 'warning',
-        icon: '🚨',
-        title: 'Budget Overruns',
-        message: `${overBudgetCategories.length} categories are over budget: ${overBudgetCategories.map(c => c.categoryName).join(', ')}.`
-      });
-    }
-
-    const topSpendingCategory = spendingData.length > 0 ? spendingData.reduce((max, cat) => cat.spent > max.spent ? cat : max, spendingData[0]) : null;
-    if (topSpendingCategory && topSpendingCategory.spent > 0) {
-      insights.push({
-        type: 'info',
-        icon: '📊',
-        title: 'Top Spending Category',
-        message: `"${topSpendingCategory.categoryName}" is your highest expense at ${formatCurrency(topSpendingCategory.spent)}.`
-      });
-    }
-
-    const efficientCategories = spendingData.filter(cat => cat.percentage > 0 && cat.percentage <= 80);
-    if (efficientCategories.length > 0) {
-      insights.push({
-        type: 'positive',
-        icon: '✅',
-        title: 'Well-Managed Categories',
-        message: `${efficientCategories.length} categories are well within budget. Great financial discipline!`
-      });
-    }
+  const renderCategories = () => {
+    const sortedSpending = [...spendingData].sort((a, b) => b.spent - a.spent).slice(0, 8);
 
     return (
-      <div className="space-y-6">
-        {/* Insights Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {insights.length > 0 ? insights.map((insight, index) => (
-            <div
-              key={index}
-              className={`p-6 rounded-lg border transition-all duration-200 hover:scale-105 ${
-                insight.type === 'positive' ? 'bg-emerald-500/10 border-emerald-500 hover:bg-emerald-500/20' :
-                insight.type === 'warning' ? 'bg-amber-500/10 border-amber-500 hover:bg-amber-500/20' :
-                'bg-sky-500/10 border-sky-500 hover:bg-sky-500/20'
-              }`}
-            >
-              <div className="flex items-start space-x-3">
-                <span className="text-2xl">{insight.icon}</span>
-                <div>
-                  <h4 className={`font-semibold mb-2 ${
-                    insight.type === 'positive' ? 'text-emerald-300' :
-                    insight.type === 'warning' ? 'text-amber-300' :
-                    'text-sky-300'
-                  }`}>
-                    {insight.title}
-                  </h4>
-                  <p className={`text-sm ${
-                    insight.type === 'positive' ? 'text-emerald-200' :
-                    insight.type === 'warning' ? 'text-amber-200' :
-                    'text-sky-200'
-                  }`}>
-                    {insight.message}
-                  </p>
-                </div>
-              </div>
-            </div>
-          )) : (
-            <div className="col-span-2 text-center py-12">
-              <div className="text-6xl mb-4">📈</div>
-              <p className="text-slate-400 text-lg">No insights available yet</p>
-              <p className="text-sm text-slate-500 mt-2">
-                Add some transactions to get personalized financial insights
-              </p>
-            </div>
-          )}
-        </div>
+      <ReportCard title="Category Spending Analysis" icon={ChartBarIcon}>
+        {sortedSpending.length > 0 ? (
+          <div className="space-y-6">
+            {sortedSpending.map(cat => {
+              const percentage = cat.allocated > 0 ? (cat.spent / cat.allocated) * 100 : 0;
+              const isOverBudget = percentage > 100;
+              let progressBarColor = 'bg-sky-500';
+              if (percentage > 100) progressBarColor = 'bg-red-500';
+              else if (percentage > 80) progressBarColor = 'bg-amber-500';
 
-        {/* Quick Stats */}
-        {spendingData.length > 0 && (
-          <div className="bg-slate-800 p-6 rounded-lg border border-slate-700">
-            <h3 className="text-xl font-semibold text-sky-400 mb-4">Quick Statistics</h3>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="text-center">
-                <div className="text-2xl font-bold text-emerald-400">{spendingData.filter(c => c.percentage <= 80).length}</div>
-                <div className="text-sm text-slate-400">On Track</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-amber-400">{spendingData.filter(c => c.percentage > 80 && c.percentage <= 100).length}</div>
-                <div className="text-sm text-slate-400">High Usage</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-red-400">{spendingData.filter(c => c.percentage > 100).length}</div>
-                <div className="text-sm text-slate-400">Over Budget</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-sky-400">{totals.transactionCount}</div>
-                <div className="text-sm text-slate-400">Transactions</div>
-              </div>
-            </div>
+              return (
+                <motion.div
+                  key={cat.categoryId}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <div className="flex justify-between items-center mb-1">
+                    <span className="font-semibold text-slate-200">{cat.categoryName}</span>
+                    <span className="text-sm font-medium text-slate-300">
+                      {formatCurrency(cat.spent)}
+                      <span className="text-slate-500"> / {formatCurrency(cat.allocated)}</span>
+                    </span>
+                  </div>
+                  <div className="w-full bg-slate-700 rounded-full h-2.5 relative">
+                    <motion.div
+                      className={`h-2.5 rounded-full ${progressBarColor}`}
+                      initial={{ width: 0 }}
+                      animate={{ width: `${Math.min(percentage, 100)}%` }}
+                      transition={{ duration: 0.8, ease: 'easeOut' }}
+                    />
+                  </div>
+                  {isOverBudget && (
+                    <p className="text-xs text-red-400 mt-1 text-right font-medium">
+                      Over budget by {formatCurrency(cat.spent - cat.allocated)}
+                    </p>
+                  )}
+                </motion.div>
+              );
+            })}
           </div>
-        )}
-      </div>
+        ) : renderNoData("No category spending to analyze.")}
+      </ReportCard>
     );
   };
 
+  const renderTrends = () => (
+     <ReportCard title="Income vs. Spending Trend" icon={TrendingUpIcon}>
+      {trendData.length > 0 ? (
+        <ResponsiveContainer width="100%" height={400}>
+          <AreaChart data={trendData}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+            <XAxis dataKey="month" stroke="#9ca3af" />
+            <YAxis stroke="#9ca3af" tickFormatter={formatCurrency}/>
+            <Tooltip content={<CustomTooltip />} />
+            <Legend />
+            <Area type="monotone" dataKey="income" stroke="#10b981" fill="#10b981" fillOpacity={0.2} name="Income" />
+            <Area type="monotone" dataKey="spent" stroke="#ef4444" fill="#ef4444" fillOpacity={0.2} name="Spent" />
+          </AreaChart>
+        </ResponsiveContainer>
+      ) : renderNoData("Not enough data to show trends.")}
+    </ReportCard>
+  );
+
+  const renderInsights = () => {
+    const topSpendingCategory = [...spendingData].sort((a, b) => b.spent - a.spent)[0];
+    const overspentCategories = spendingData.filter(c => c.spent > c.allocated);
+
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <ReportCard title="Top Spending Category" icon={CurrencyDollarIcon}>
+          {topSpendingCategory && topSpendingCategory.spent > 0 ? (
+            <div>
+              <p className="text-2xl font-bold text-sky-400">{topSpendingCategory.categoryName}</p>
+              <p className="text-4xl font-extrabold text-white mt-2">{formatCurrency(topSpendingCategory.spent)}</p>
+              <p className="text-slate-400 mt-1">This is your highest spending area this period.</p>
+            </div>
+          ) : renderNoData("No spending data available.")}
+        </ReportCard>
+        
+        <ReportCard title="Overspent Categories" icon={ExclamationTriangleIcon}>
+          {overspentCategories.length > 0 ? (
+            <ul className="space-y-3">
+              {overspentCategories.map(cat => (
+                <li key={cat.categoryId} className="flex justify-between items-center">
+                  <span className="text-slate-300">{cat.categoryName}</span>
+                  <span className="font-semibold text-red-400">
+                    +{formatCurrency(cat.spent - cat.allocated)}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <div className="flex flex-col items-center justify-center h-full">
+              <p className="text-lg text-emerald-400 font-semibold">Great Job!</p>
+              <p className="text-slate-400">No categories are overspent.</p>
+            </div>
+          )}
+        </ReportCard>
+      </div>
+    );
+  };
+  
+  const renderContent = () => {
+    switch (selectedReportType) {
+      case 'overview': return renderOverview();
+      case 'categories': return renderCategories();
+      case 'trends': return renderTrends();
+      case 'insights': return renderInsights();
+      default: return null;
+    }
+  };
+
   return (
-    <div className="w-full space-y-6">
-      <div className="bg-slate-800/50 p-4 rounded-2xl border border-slate-700">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <div>
-            <h1 className="text-2xl font-bold text-white">Financial Reports</h1>
-            <p className="text-slate-400 mt-1">Analyze spending patterns and track your financial progress.</p>
-          </div>
-          <div className="flex items-center gap-2">
-            <select
-              value={selectedPeriod}
-              onChange={(e) => setSelectedPeriod(e.target.value as any)}
-              className="bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-sm text-white focus:ring-sky-500 focus:border-sky-500"
-            >
-              <option value="week">Last 7 Days</option>
-              <option value="month">Last Month</option>
-              <option value="quarter">Last Quarter</option>
-              <option value="year">Last Year</option>
-            </select>
-            <button 
-              onClick={exportToCSV}
-              className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-4 py-2 rounded-lg transition-colors"
-            >
-              <DocumentArrowDownIcon className="w-5 h-5" />
-              <span>Export CSV</span>
-            </button>
-          </div>
+    <div className="p-4 sm:p-6 lg:p-8 bg-slate-900 min-h-screen text-white">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8">
+        <div>
+          <h1 className="text-3xl sm:text-4xl font-bold text-white">Financial Reports</h1>
+          <p className="text-slate-400 mt-2">Analyze your financial activity with detailed reports.</p>
         </div>
-        <div className="mt-6">
-          <div className="relative flex space-x-2 bg-slate-700/50 p-1 rounded-full">
-            {reportTypes.map(type => (
-              <button
-                key={type}
-                onClick={() => setSelectedReportType(type as any)}
-                className={`relative capitalize flex-1 py-2 text-sm font-semibold rounded-full transition-colors focus:outline-none ${
-                  selectedReportType === type ? 'text-white' : 'text-slate-300 hover:bg-slate-600/50'
-                }`}
-              >
-                {selectedReportType === type && (
-                  <motion.div
-                    layoutId="report-tab"
-                    className="absolute inset-0 bg-sky-600 rounded-full"
-                    transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-                  />
-                )}
-                <span className="relative z-10">{type}</span>
-              </button>
-            ))}
-          </div>
-        </div>
+        <button 
+          onClick={exportToCSV}
+          className="mt-4 sm:mt-0 flex items-center gap-2 bg-slate-700 hover:bg-slate-600 text-white font-semibold px-4 py-2 rounded-lg transition-colors"
+        >
+          <DocumentArrowDownIcon className="w-5 h-5"/>
+          Export CSV
+        </button>
       </div>
 
-      <div>
-        {selectedReportType === 'overview' && renderOverview()}
-        {selectedReportType === 'categories' && renderCategories()}
-        {selectedReportType === 'trends' && renderTrends()}
-        {selectedReportType === 'insights' && renderInsights()}
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+        {/* Left Sidebar: Controls */}
+        <div className="lg:col-span-1 space-y-6">
+          <div>
+            <h2 className="text-lg font-semibold text-sky-400 mb-3">Report Type</h2>
+            <div className="space-y-2">
+              {reportTypes.map(report => (
+                <button
+                  key={report.id}
+                  onClick={() => setSelectedReportType(report.id)}
+                  className={`w-full flex items-center gap-3 p-3 rounded-lg text-left transition-all duration-200 ${
+                    selectedReportType === report.id
+                      ? 'bg-sky-500/20 text-white font-semibold'
+                      : 'bg-slate-800/50 hover:bg-slate-700/70 text-slate-300'
+                  }`}
+                >
+                  <report.icon className={`w-5 h-5 ${selectedReportType === report.id ? 'text-sky-400' : 'text-slate-400'}`} />
+                  {report.name}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div>
+            <h2 className="text-lg font-semibold text-sky-400 mb-3">Date Range</h2>
+            <div className="flex bg-slate-800/80 rounded-full p-1">
+              {(['week', 'month', 'quarter', 'year'] as const).map(period => (
+                <button
+                  key={period}
+                  onClick={() => setSelectedPeriod(period)}
+                  className={`w-1/4 py-2 text-sm font-semibold rounded-full capitalize transition-colors ${
+                    selectedPeriod === period ? 'bg-sky-600 text-white' : 'text-slate-300 hover:bg-slate-700'
+                  }`}
+                >
+                  {period}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Right Content: Reports */}
+        <div className="lg:col-span-3">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={selectedReportType}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.3 }}
+            >
+              {renderContent()}
+            </motion.div>
+          </AnimatePresence>
+        </div>
       </div>
     </div>
   );

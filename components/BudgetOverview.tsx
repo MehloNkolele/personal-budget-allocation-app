@@ -1,4 +1,5 @@
 import React, { useState, useRef } from 'react';
+import AmountDetailModal from './AmountDetailModal';
 import { InfoIcon, CheckCircleIcon, EyeIcon, EyeSlashIcon } from '../constants';
 import { CURRENCIES } from '../constants';
 
@@ -29,6 +30,12 @@ const BudgetOverview: React.FC<BudgetOverviewProps> = ({
   isIncomeHidden,
   onToggleIncomeHidden
 }) => {
+  const [modalState, setModalState] = useState<{isOpen: boolean; title: string; amount: number}>({
+    isOpen: false,
+    title: '',
+    amount: 0
+  });
+
   const allocationExceedsIncome = totalAllocated > totalIncome && totalIncome > 0;
   const allocationMatchesIncome = totalAllocated === totalIncome && totalIncome > 0;
   const [isIncomeInputFocused, setIsIncomeInputFocused] = useState<boolean>(false);
@@ -65,8 +72,25 @@ const BudgetOverview: React.FC<BudgetOverviewProps> = ({
       onToggleIncomeHidden();
     }
   };
+
+  const openAmountModal = (title: string, amount: number) => {
+    setModalState({ isOpen: true, title, amount });
+  };
+
+  const closeAmountModal = () => {
+    setModalState({ isOpen: false, title: '', amount: 0 });
+  };
+
   return (
     <>
+      <AmountDetailModal 
+        isOpen={modalState.isOpen}
+        onClose={closeAmountModal}
+        title={modalState.title}
+        amount={modalState.amount}
+        formatCurrency={formatCurrency}
+      />
+
       {/* Enhanced Header Section */}
       <div className="mb-8">
         <div className="flex items-center justify-between mb-6">
@@ -143,7 +167,11 @@ const BudgetOverview: React.FC<BudgetOverviewProps> = ({
         
         <div className="space-y-4 sm:space-y-6">
           {/* Income Display */}
-          <div className="flex justify-between items-center p-3 sm:p-4 bg-slate-700/50 rounded-xl overflow-hidden">
+          <button
+            onClick={() => openAmountModal('Total Income', totalIncome)}
+            className="w-full flex justify-between items-center p-3 sm:p-4 bg-slate-700/50 rounded-xl overflow-hidden text-left transition-transform hover:scale-[1.02]"
+            disabled={isIncomeHidden}
+          >
             <div className="flex items-center space-x-2 sm:space-x-3 min-w-0 flex-shrink">
               <div className="w-8 h-8 sm:w-10 sm:h-10 bg-emerald-500/20 rounded-lg flex items-center justify-center flex-shrink-0">
                 <svg className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -155,10 +183,14 @@ const BudgetOverview: React.FC<BudgetOverviewProps> = ({
             <span className="font-bold text-sm sm:text-base lg:text-lg xl:text-xl text-emerald-400 flex-shrink-0 ml-2 text-right">
               {!isIncomeHidden ? formatSmartCurrency(totalIncome) : "•••••"}
             </span>
-          </div>
+          </button>
 
           {/* Allocated Display */}
-          <div className="flex justify-between items-center p-3 sm:p-4 bg-slate-700/50 rounded-xl overflow-hidden">
+          <button
+            onClick={() => openAmountModal('Total Allocated', totalAllocated)}
+            className="w-full flex justify-between items-center p-3 sm:p-4 bg-slate-700/50 rounded-xl overflow-hidden text-left transition-transform hover:scale-[1.02]"
+            disabled={areGlobalAmountsHidden}
+          >
             <div className="flex items-center space-x-2 sm:space-x-3 min-w-0 flex-shrink">
               <div className="w-8 h-8 sm:w-10 sm:h-10 bg-sky-500/20 rounded-lg flex items-center justify-center flex-shrink-0">
                 <svg className="w-4 h-4 sm:w-5 sm:h-5 text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -170,7 +202,7 @@ const BudgetOverview: React.FC<BudgetOverviewProps> = ({
             <span className={`font-bold text-sm sm:text-base lg:text-lg xl:text-xl flex-shrink-0 ml-2 text-right ${allocationExceedsIncome && !areGlobalAmountsHidden ? 'text-red-400' : 'text-sky-400'}`}>
               {formatSmartCurrency(totalAllocated)}
             </span>
-          </div>
+          </button>
 
           {/* Progress Bar */}
           {!areGlobalAmountsHidden && totalIncome > 0 && (
@@ -199,7 +231,11 @@ const BudgetOverview: React.FC<BudgetOverviewProps> = ({
           )}
 
           {/* Remaining Amount */}
-          <div className="flex justify-between items-center p-3 sm:p-4 bg-slate-700/50 rounded-xl overflow-hidden">
+          <button
+            onClick={() => openAmountModal('Remaining to Allocate', unallocatedAmount)}
+            className="w-full flex justify-between items-center p-3 sm:p-4 bg-slate-700/50 rounded-xl overflow-hidden text-left transition-transform hover:scale-[1.02]"
+            disabled={areGlobalAmountsHidden}
+          >
             <div className="flex items-center space-x-2 sm:space-x-3 min-w-0 flex-shrink">
               <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${
                 unallocatedAmount < 0 ? 'bg-red-500/20' : 'bg-amber-500/20'
@@ -213,7 +249,7 @@ const BudgetOverview: React.FC<BudgetOverviewProps> = ({
             <span className={`font-bold text-sm sm:text-base lg:text-lg xl:text-xl flex-shrink-0 ml-2 text-right ${unallocatedAmount < 0 && !areGlobalAmountsHidden ? 'text-red-400' : 'text-amber-400'}`}>
               {formatSmartCurrency(unallocatedAmount)}
             </span>
-          </div>
+          </button>
         </div>
 
         {/* Status Messages */}

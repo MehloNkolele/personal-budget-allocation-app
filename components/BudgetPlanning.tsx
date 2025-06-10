@@ -210,13 +210,17 @@ const BudgetPlanning: React.FC<BudgetPlanningProps> = ({
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
+      {/* Collapsible Budget Overview */}
       <div className="bg-slate-800/50 rounded-2xl border border-slate-700 overflow-hidden">
         <button 
           onClick={() => setIsOverviewVisible(!isOverviewVisible)}
-          className="w-full flex justify-between items-center p-4 text-left"
+          className="w-full flex justify-between items-center p-4 sm:p-5 text-left transition-colors hover:bg-slate-800"
         >
-          <h2 className="text-xl font-semibold text-sky-400">Budget Overview</h2>
+          <div>
+            <h2 className="text-lg sm:text-xl font-bold text-sky-400">Budget Setup</h2>
+            <p className="text-sm text-slate-400 mt-1">Configure your income and currency for all budgets.</p>
+          </div>
           <motion.div
             animate={{ rotate: isOverviewVisible ? 180 : 0 }}
             transition={{ duration: 0.2 }}
@@ -231,7 +235,7 @@ const BudgetPlanning: React.FC<BudgetPlanningProps> = ({
               animate={{ height: 'auto', opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
               transition={{ duration: 0.3, ease: 'easeInOut' }}
-              className="px-4 pb-4"
+              className="px-4 sm:px-5 pb-4 sm:pb-5"
             >
               <BudgetOverview
                 totalIncome={totalIncome}
@@ -251,186 +255,131 @@ const BudgetPlanning: React.FC<BudgetPlanningProps> = ({
         </AnimatePresence>
       </div>
 
-      {/* Collapsible Budget Planning Section */}
-      <div className="bg-slate-800/50 rounded-2xl border border-slate-700 overflow-hidden">
-        <button
-          onClick={() => setIsPlanningVisible(!isPlanningVisible)}
-          className="w-full flex justify-between items-center p-4 text-left"
-        >
-        <div>
-            <h2 className="text-xl font-semibold text-sky-400">Budget Planning</h2>
-            <p className="text-slate-400 text-sm mt-1">
-              Plan budgets and create reusable templates.
-          </p>
-        </div>
-          <motion.div
-            animate={{ rotate: isPlanningVisible ? 180 : 0 }}
-            transition={{ duration: 0.2 }}
+      {/* Redesigned Budget Planning Section */}
+      <div className="bg-slate-800/50 rounded-2xl border border-slate-700 p-4 sm:p-6 lg:p-8">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
+          <div>
+            <h2 className="text-2xl sm:text-3xl font-bold text-white">Budget Planning</h2>
+            <p className="text-slate-400 mt-1">Plan budgets and create reusable templates.</p>
+          </div>
+          <button 
+            onClick={() => setShowTemplateManager(true)}
+            className="mt-4 sm:mt-0 flex items-center gap-2 bg-gradient-to-r from-purple-500 to-indigo-600 text-white font-semibold px-4 py-2 rounded-lg hover:opacity-90 transition-opacity"
           >
-            <ChevronDownIcon className="w-6 h-6 text-slate-400" />
-          </motion.div>
-        </button>
-        <AnimatePresence>
-          {isPlanningVisible && (
+            <CogIcon className="w-5 h-5"/>
+            Manage Templates
+          </button>
+        </div>
+
+        {/* Month Selector */}
+        <div className="mb-8">
+            <h3 className="text-lg font-semibold text-sky-400 mb-4">Select Month to Plan</h3>
+            <div className="relative">
+                <div className="flex space-x-3 overflow-x-auto pb-4 -mx-4 px-4 scrollbar-thin scrollbar-thumb-slate-600 scrollbar-track-slate-800">
+                    {availableMonths.map(month => (
+                        <motion.button
+                            key={month.key}
+                            onClick={() => setSelectedMonth(month.key)}
+                            className={`relative flex-shrink-0 w-28 h-24 p-3 rounded-xl border-2 transition-all duration-200 flex flex-col justify-center items-center text-center
+                                ${selectedMonth === month.key 
+                                    ? 'bg-sky-500/20 border-sky-500' 
+                                    : 'bg-slate-700/50 border-slate-700 hover:border-sky-600'}`
+                                }
+                            whileHover={{ y: -4 }}
+                            transition={{ type: 'spring', stiffness: 300 }}
+                        >
+                            <CalendarIcon className={`w-6 h-6 mb-2 ${selectedMonth === month.key ? 'text-sky-400' : 'text-slate-400'}`} />
+                            <span className={`font-semibold text-sm ${selectedMonth === month.key ? 'text-white' : 'text-slate-300'}`}>
+                                {month.name.split(' ')[0]}
+                            </span>
+                             <span className={`text-xs ${selectedMonth === month.key ? 'text-sky-200' : 'text-slate-400'}`}>
+                                {month.name.split(' ')[1]}
+                            </span>
+                        </motion.button>
+                    ))}
+                </div>
+            </div>
+        </div>
+
+        {/* Actions for Selected Month */}
+        <AnimatePresence mode="wait">
             <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: 'auto', opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.3, ease: 'easeInOut' }}
-              className="px-4 pb-4"
+                key={selectedMonth}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.2 }}
             >
-              <div className="space-y-6 pt-4">
-                <div className="flex justify-end">
-        <button
-          onClick={() => setShowTemplateManager(true)}
-          className="flex items-center space-x-2 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg transition-colors"
-        >
-          <CogIcon className="w-4 h-4" />
-          <span>Manage Templates</span>
-        </button>
-      </div>
+                {currentBudget ? (
+                    <div className="bg-slate-700/50 p-6 rounded-2xl flex flex-col sm:flex-row justify-between items-center">
+                        <div>
+                           <h4 className="font-bold text-white text-lg">Budget for {currentBudget.monthName} exists.</h4>
+                           <p className="text-slate-400 text-sm mt-1">You can view, edit, or delete the existing budget.</p>
+                        </div>
+                        <div className="flex items-center gap-4 mt-4 sm:mt-0">
+                            <button
+                                onClick={() => setViewingBudget(currentBudget)}
+                                className="flex items-center gap-2 bg-sky-600 text-white font-semibold px-4 py-2 rounded-lg hover:bg-sky-700 transition-colors"
+                            >
+                                <EyeIcon className="w-5 h-5"/>
+                                View Budget
+                            </button>
+                            <button
+                                onClick={() => deleteBudget(currentBudget.id)}
+                                className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-500/10 rounded-full transition-colors"
+                                aria-label="Delete budget"
+                            >
+                                <TrashIcon className="w-5 h-5"/>
+                            </button>
+                        </div>
+                    </div>
+                ) : (
+                    <div className="bg-slate-700/50 p-6 rounded-2xl">
+                         <h4 className="font-bold text-white text-lg mb-4">Create a budget for {UserDataManager.getMonthName(UserDataManager.parseMonthKey(selectedMonth).year, UserDataManager.parseMonthKey(selectedMonth).month)}</h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                           {/* Create New Blank Budget */}
+                            <button onClick={createNewBudget} className="group p-4 bg-slate-600/50 hover:bg-sky-500/20 rounded-xl transition-colors text-left">
+                               <div className="flex items-center justify-center w-12 h-12 rounded-full bg-sky-500/20 mb-3 group-hover:bg-sky-500/30">
+                                   <PlusIcon className="w-6 h-6 text-sky-400"/>
+                               </div>
+                               <h5 className="font-semibold text-white">Start a Blank Budget</h5>
+                               <p className="text-sm text-slate-400 mt-1">Create a fresh budget from scratch.</p>
+                           </button>
+                           
+                           {/* Copy from current allocations */}
+                            <button onClick={createBudgetFromCurrent} className="group p-4 bg-slate-600/50 hover:bg-green-500/20 rounded-xl transition-colors text-left">
+                               <div className="flex items-center justify-center w-12 h-12 rounded-full bg-green-500/20 mb-3 group-hover:bg-green-500/30">
+                                   <DocumentDuplicateIcon className="w-6 h-6 text-green-400"/>
+                               </div>
+                               <h5 className="font-semibold text-white">Copy Current Setup</h5>
+                               <p className="text-sm text-slate-400 mt-1">Use your globally set categories and income.</p>
+                           </button>
 
-      {/* Month Selection */}
-      <div className="bg-slate-800 p-6 rounded-lg border border-slate-700">
-        <h3 className="text-xl font-semibold text-sky-400 mb-4">Select Month to Plan</h3>
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-          {availableMonths.map(month => (
-            <button
-              key={month.key}
-              onClick={() => setSelectedMonth(month.key)}
-              className={`p-4 rounded-lg border transition-all duration-200 ${
-                selectedMonth === month.key
-                  ? 'bg-sky-600 border-sky-500 text-white'
-                  : 'bg-slate-700 border-slate-600 text-slate-300 hover:bg-slate-600'
-              }`}
-            >
-              <CalendarIcon className="w-5 h-5 mx-auto mb-2" />
-              <div className="text-sm font-medium">{month.name}</div>
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Current Budget Status */}
-      <div className="bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-lg">
-        <div className="flex justify-between items-start">
-            <div>
-                <h3 className="text-xl font-bold text-white mb-1">
-                    Budget for {availableMonths.find(m => m.key === selectedMonth)?.name}
-                </h3>
-                <p className="text-sm text-slate-400">
-                    {currentBudget ? 'A budget is set for this month.' : 'No budget created for this month yet.'}
-                </p>
-            </div>
-            {currentBudget && (
-                <button
-                    onClick={() => deleteBudget(currentBudget.id)}
-                    className="p-2 text-slate-500 hover:text-red-400 hover:bg-red-500/10 rounded-full transition-all"
-                    aria-label="Delete budget"
-                >
-                    <TrashIcon className="w-5 h-5" />
-                </button>
-            )}
-        </div>
-
-        {currentBudget ? (
-          <div className="mt-6">
-            <div className="grid grid-cols-2 gap-4 text-center mb-6">
-                <div>
-                    <p className="text-sm text-slate-400">Total Income</p>
-                    <p className="text-2xl font-bold text-sky-400">{formatCurrency(currentBudget.totalIncome)}</p>
-                </div>
-                <div>
-                    <p className="text-sm text-slate-400">Categories</p>
-                    <p className="text-2xl font-bold text-sky-400">{currentBudget.categories.length}</p>
-                </div>
-            </div>
-            <button
-                onClick={() => setViewingBudget(currentBudget)}
-                className="w-full text-center bg-sky-600/90 hover:bg-sky-600 text-white font-bold py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
-            >
-                <EyeIcon className="w-5 h-5"/>
-                <span>View & Edit Budget</span>
-            </button>
-          </div>
-        ) : (
-          <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="bg-slate-700/50 p-4 rounded-lg border border-slate-600">
-              <h4 className="font-semibold text-white mb-2">Create New Budget</h4>
-              <p className="text-slate-400 text-sm mb-3">Start with an empty slate for the selected month.</p>
-              <button
-                onClick={createNewBudget}
-                className="w-full flex items-center justify-center space-x-2 bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded-lg transition-colors"
-              >
-                <PlusIcon className="w-4 h-4" />
-                <span>Create Blank Budget</span>
-              </button>
-            </div>
-
-            <div className="bg-slate-700/50 p-4 rounded-lg border border-slate-600">
-              <h4 className="font-semibold text-white mb-2">Copy Existing Budget</h4>
-              <p className="text-slate-400 text-sm mb-3">Reuse a budget from a previous month to save time.</p>
-              <div className="flex gap-2">
-                <select
-                  value={copyFromBudgetId}
-                  onChange={(e) => setCopyFromBudgetId(e.target.value)}
-                  className="w-full bg-slate-600 border border-slate-500 rounded-lg px-3 py-2 text-sm"
-                >
-                  <option value="">Select a budget to copy...</option>
-                  {monthlyBudgets.map(b => <option key={b.id} value={b.id}>{b.monthName}</option>)}
-                </select>
-                <button
-                  onClick={() => copyExistingBudget(copyFromBudgetId)}
-                  disabled={!copyFromBudgetId}
-                  className="flex items-center space-x-2 bg-sky-600 hover:bg-sky-700 text-white px-3 py-2 rounded-lg transition-colors disabled:bg-slate-500 disabled:cursor-not-allowed"
-                >
-                  <DocumentDuplicateIcon className="w-4 h-4" />
-                  <span>Copy</span>
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Recent Activity */}
-      <div className="bg-slate-800 p-6 rounded-lg border border-slate-700">
-        <h3 className="text-xl font-semibold text-sky-400 mb-4">Recent Budgets</h3>
-        <div className="space-y-3">
-          {monthlyBudgets.slice(0, 5).map(budget => (
-            <div key={budget.id} className="flex items-center justify-between bg-slate-700 p-3 rounded-lg">
-              <div>
-                <p className="font-medium text-slate-200">{budget.monthName}</p>
-                <p className="text-sm text-slate-400">
-                  Income: {formatCurrency(budget.totalIncome)} - {budget.categories.length} categories
-                </p>
-              </div>
-              <div className="flex space-x-1">
-                <button
-                  onClick={() => setViewingBudget(budget)}
-                  className="text-sky-400 hover:text-sky-300 p-1"
-                  title="View Details"
-                >
-                  <EyeIcon className="w-4 h-4" />
-                </button>
-                <button
-                  onClick={() => deleteBudget(budget.id)}
-                  className="text-red-400 hover:text-red-300 p-1"
-                  title="Delete Budget"
-                >
-                  <TrashIcon className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
-                </div>
-              </div>
+                            {/* Select a template */}
+                            {budgetTemplates.length > 0 && (
+                                <div className="md:col-span-2 lg:col-span-1">
+                                    <h5 className="font-semibold text-white mb-2">From a Template</h5>
+                                    <div className="space-y-2">
+                                    {budgetTemplates.map(template => (
+                                        <button 
+                                            key={template.id}
+                                            onClick={() => createBudgetFromTemplate(template)}
+                                            className="w-full text-left p-3 bg-slate-600/50 hover:bg-indigo-500/20 rounded-lg transition-colors text-sm text-slate-300 hover:text-white"
+                                        >
+                                            {template.name}
+                                        </button>
+                                    ))}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                )}
             </motion.div>
-          )}
         </AnimatePresence>
       </div>
-      
+
       {/* Modals */}
       {viewingBudget && (
         <MonthlyBudgetView
