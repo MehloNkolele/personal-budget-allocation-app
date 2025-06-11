@@ -1,0 +1,32 @@
+{
+  "appName": "Budget Tracker Pro",
+  "appId": "com.budgettracker.app",
+  "version": "1.0.0",
+  "interface": {
+    "swipeGestures": {
+      "enabled": true,
+      "backGesture": true,
+      "forwardGesture": true
+    },
+    "navigation": {
+      "enableSPANavigation": true,
+      "historyManagement": true
+    }
+  },
+  "permissions": {
+    "camera": false,
+    "location": false,
+    "notifications": true,
+    "storage": true
+  },
+  "branding": {
+    "statusBar": {
+      "style": "DARK",
+      "backgroundColor": "#0f172a"
+    },
+    "splashScreen": {
+      "backgroundColor": "#0f172a",
+      "duration": 2000
+    }
+  }
+}

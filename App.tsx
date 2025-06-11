@@ -15,13 +15,16 @@ import { CURRENCIES } from './constants';
 import { ToastProvider } from './contexts/ToastContext';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { useToast } from './hooks/useToast';
+import { useNavigation } from './hooks/useNavigation';
 import Toaster from './components/Toaster';
+import MedianBridge from './components/MedianBridge';
 import { UserDataManager } from './utils/userDataManager';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 
 const AppContent: React.FC = () => {
   const { addToast } = useToast();
   const { user } = useAuth();
+  const { currentSection, navigateToSection } = useNavigation();
   const [totalIncome, setTotalIncome] = useState<number>(0);
   const [categories, setCategories] = useState<Category[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -30,7 +33,6 @@ const AppContent: React.FC = () => {
   const [areGlobalAmountsHidden, setAreGlobalAmountsHidden] = useState<boolean>(false);
   const [isIncomeHidden, setIsIncomeHidden] = useState<boolean>(true);
   const [monthlyBudgets, setMonthlyBudgets] = useState<MonthlyBudget[]>([]);
-  const [currentSection, setCurrentSection] = useState<'dashboard' | 'categories' | 'reports' | 'planning' | 'history' | 'savings'>('dashboard');
   const [isDataLoaded, setIsDataLoaded] = useState<boolean>(false);
 
   useEffect(() => {
@@ -81,7 +83,7 @@ const AppContent: React.FC = () => {
     }
   }, [user, isDataLoaded, totalIncome, categories, transactions, selectedCurrency, areGlobalAmountsHidden, isIncomeHidden, monthlyBudgets]);
 
-  const handleSectionChange = useCallback((section: 'dashboard' | 'categories' | 'reports' | 'planning' | 'history' | 'savings') => setCurrentSection(section), []);
+  const handleSectionChange = useCallback((section: 'dashboard' | 'categories' | 'reports' | 'planning' | 'history' | 'savings') => navigateToSection(section), [navigateToSection]);
   const handleTotalIncomeChange = useCallback((income: number) => { setTotalIncome(income); setIsIncomeHidden(true); }, []);
   const toggleIncomeHidden = useCallback(() => setIsIncomeHidden(prev => !prev), []);
   const handleCurrencyChange = useCallback((currencyCode: string) => setSelectedCurrency(currencyCode), []);
@@ -299,13 +301,15 @@ const AppContent: React.FC = () => {
 };
 
 const App: React.FC = () => (
-  <AuthProvider>
-    <ToastProvider>
-      <ProtectedRoute>
-        <AppContent />
-      </ProtectedRoute>
-    </ToastProvider>
-  </AuthProvider>
+  <MedianBridge>
+    <AuthProvider>
+      <ToastProvider>
+        <ProtectedRoute>
+          <AppContent />
+        </ProtectedRoute>
+      </ToastProvider>
+    </AuthProvider>
+  </MedianBridge>
 );
 
 export default App;

@@ -14,10 +14,12 @@ import {
 import UserDropdown from './UserDropdown';
 import Logo from './Logo';
 
+import { AppSection } from '../services/navigationService';
+
 interface NavbarProps {
   onNewCategory: () => void;
-  currentSection?: 'dashboard' | 'categories' | 'reports' | 'planning' | 'history' | 'savings';
-  onSectionChange?: (section: 'dashboard' | 'categories' | 'reports' | 'planning' | 'history' | 'savings') => void;
+  currentSection?: AppSection;
+  onSectionChange?: (section: AppSection) => void;
 }
 
 const Navbar: React.FC<NavbarProps> = ({
@@ -49,7 +51,7 @@ const Navbar: React.FC<NavbarProps> = ({
 
   const handleSectionClick = (sectionId: string) => {
     if (onSectionChange && (sectionId === 'dashboard' || sectionId === 'categories' || sectionId === 'reports' || sectionId === 'planning' || sectionId === 'history' || sectionId === 'savings')) {
-      onSectionChange(sectionId as 'dashboard' | 'categories' | 'reports' | 'planning' | 'history' | 'savings');
+      onSectionChange(sectionId as AppSection);
     }
   };
 
