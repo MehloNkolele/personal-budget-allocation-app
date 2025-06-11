@@ -94,8 +94,9 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
 
   if (showSplash) {
     return (
-      <SplashScreen 
-        onComplete={handleSplashComplete} 
+      <SplashScreen
+        message="Signing Out..."
+        onComplete={handleSplashComplete}
         onDisable={handleSplashDisable}
         isAuthenticated={!!user}
       />

@@ -166,55 +166,89 @@ const Dashboard: React.FC<DashboardProps> = ({
 
       {/* Enhanced Content Section */}
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
-        {/* Top Categories */}
+        {/* Top Categories - Redesigned */}
         {topCategories.length > 0 && (
-          <div className="xl:col-span-2 bg-gradient-to-br from-slate-800 to-slate-700 p-8 rounded-2xl border border-slate-600">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-2xl font-bold text-white">Top Categories</h3>
-              <div className="flex items-center space-x-4">
-                <div className="flex items-center text-sm text-slate-400">
-                  <div className="w-2 h-2 bg-sky-400 rounded-full mr-2"></div>
-                  Budget allocation breakdown
-                </div>
-                <button
-                  onClick={() => onNavigateToSection?.('categories')}
-                  className="text-sky-400 hover:text-sky-300 text-sm font-medium transition-colors duration-200 flex items-center space-x-1 group"
-                >
-                  <span>View All</span>
-                  <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+          <div className="xl:col-span-2 bg-gradient-to-br from-slate-800/80 via-slate-800/60 to-slate-700/80 backdrop-blur-sm p-8 rounded-3xl border border-slate-600/50 shadow-2xl">
+            <div className="flex items-center justify-between mb-8">
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 bg-gradient-to-br from-sky-400 to-blue-500 rounded-2xl flex items-center justify-center shadow-lg">
+                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                   </svg>
-                </button>
+                </div>
+                <div>
+                  <h3 className="text-2xl font-bold text-white">Top Categories</h3>
+                  <p className="text-slate-400 text-sm">Budget allocation breakdown</p>
+                </div>
               </div>
+              <button
+                onClick={() => onNavigateToSection?.('categories')}
+                className="flex items-center space-x-2 bg-gradient-to-r from-sky-500/20 to-blue-500/20 hover:from-sky-500/30 hover:to-blue-500/30 text-sky-400 hover:text-sky-300 px-4 py-2 rounded-xl border border-sky-500/30 hover:border-sky-400/50 transition-all duration-300 group backdrop-blur-sm"
+              >
+                <span className="text-sm font-medium">View All</span>
+                <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
             </div>
-            <div className="space-y-6">
+            <div className="space-y-4">
               {topCategories.map((cat, index) => {
                 const percentage = totalAllocated > 0 ? (cat.allocatedAmount / totalAllocated) * 100 : 0;
-                const colors = ['bg-sky-400', 'bg-emerald-400', 'bg-purple-400'];
-                const bgColors = ['bg-sky-500/20', 'bg-emerald-500/20', 'bg-purple-500/20'];
-                
+                const gradients = [
+                  'from-sky-400 to-blue-500',
+                  'from-emerald-400 to-green-500',
+                  'from-purple-400 to-violet-500'
+                ];
+                const bgGradients = [
+                  'from-sky-500/10 to-blue-500/10',
+                  'from-emerald-500/10 to-green-500/10',
+                  'from-purple-500/10 to-violet-500/10'
+                ];
+                const borderColors = [
+                  'border-sky-500/20 hover:border-sky-400/40',
+                  'border-emerald-500/20 hover:border-emerald-400/40',
+                  'border-purple-500/20 hover:border-purple-400/40'
+                ];
+
                 return (
                   <button
                     key={cat.id}
                     onClick={() => onNavigateToSection?.('categories')}
-                    className="w-full flex items-center justify-between p-4 bg-slate-700/50 rounded-xl hover:bg-slate-700/70 transition-all duration-200 group text-left focus:outline-none focus:ring-2 focus:ring-sky-500/50 min-w-0"
+                    className={`w-full group relative overflow-hidden bg-gradient-to-r ${bgGradients[index]} backdrop-blur-sm border ${borderColors[index]} rounded-2xl p-6 hover:scale-[1.02] transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-sky-500/50 shadow-lg hover:shadow-xl`}
                   >
-                    <div className="flex items-center space-x-4 min-w-0 flex-1">
-                      <div className={`w-10 h-10 sm:w-12 sm:h-12 ${bgColors[index]} rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-200 flex-shrink-0`}>
-                        <div className={`w-3 h-3 ${colors[index]} rounded-full`}></div>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-4">
+                        <div className={`relative w-14 h-14 bg-gradient-to-br ${gradients[index]} rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300`}>
+                          <div className="absolute inset-0 bg-white/20 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                          <span className="text-white font-bold text-lg relative z-10">{cat.name.charAt(0)}</span>
+                        </div>
+                        <div className="text-left">
+                          <h4 className="text-white font-bold text-lg group-hover:text-sky-100 transition-colors duration-200">{cat.name}</h4>
+                          <p className="text-slate-400 text-sm font-medium">{percentage.toFixed(1)}% of budget</p>
+                          <div className="flex items-center space-x-2 mt-1">
+                            <div className="w-12 bg-slate-600/50 rounded-full h-1.5">
+                              <div
+                                className={`h-1.5 rounded-full bg-gradient-to-r ${gradients[index]} transition-all duration-500`}
+                                style={{ width: `${Math.min(percentage, 100)}%` }}
+                              ></div>
+                            </div>
+                            <span className="text-xs text-slate-500">{cat.subcategories?.length || 0} items</span>
+                          </div>
+                        </div>
                       </div>
-                      <div className="min-w-0 flex-1">
-                        <p className="text-white font-semibold text-base sm:text-lg truncate">{cat.name}</p>
-                        <p className="text-slate-400 text-sm">{percentage.toFixed(1)}% of budget</p>
+                      <div className="text-right">
+                        <p className={`font-bold text-xl bg-gradient-to-r ${gradients[index]} bg-clip-text text-transparent`}>
+                          {formatCurrency(cat.allocatedAmount)}
+                        </p>
+                        <div className="flex items-center justify-end space-x-1 mt-1">
+                          <div className={`w-2 h-2 rounded-full bg-gradient-to-r ${gradients[index]}`}></div>
+                          <span className="text-xs text-slate-400 font-medium">#{index + 1}</span>
+                        </div>
                       </div>
                     </div>
-                    <div className="text-right flex-shrink-0 min-w-0">
-                      <p className="text-sky-400 font-bold text-lg sm:text-xl">
-                        <span className="hidden sm:inline">{formatCurrencyResponsive(cat.allocatedAmount).full}</span>
-                        <span className="sm:hidden">{formatCurrencyResponsive(cat.allocatedAmount).abbreviated}</span>
-                      </p>
-                      <p className="text-slate-500 text-sm">{cat.subcategories?.length || 0} items</p>
-                    </div>
+
+                    {/* Subtle hover effect overlay */}
+                    <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/5 to-white/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-2xl"></div>
                   </button>
                 );
               })}

@@ -17,6 +17,7 @@ import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { useToast } from './hooks/useToast';
 import Toaster from './components/Toaster';
 import { UserDataManager } from './utils/userDataManager';
+import ProtectedRoute from './components/auth/ProtectedRoute';
 
 const AppContent: React.FC = () => {
   const { addToast } = useToast();
@@ -25,7 +26,7 @@ const AppContent: React.FC = () => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [modalState, setModalState] = useState<ModalType>(null);
-  const [selectedCurrency, setSelectedCurrency] = useState<string>(CURRENCIES[0].code);
+  const [selectedCurrency, setSelectedCurrency] = useState<string>(CURRENCIES[0].code || CURRENCIES[0].value || 'USD');
   const [areGlobalAmountsHidden, setAreGlobalAmountsHidden] = useState<boolean>(false);
   const [isIncomeHidden, setIsIncomeHidden] = useState<boolean>(true);
   const [monthlyBudgets, setMonthlyBudgets] = useState<MonthlyBudget[]>([]);
@@ -53,7 +54,7 @@ const AppContent: React.FC = () => {
         setTotalIncome(userData.totalIncome || 0);
         setCategories(userData.categories || []);
         setTransactions(userData.transactions || []);
-        setSelectedCurrency(userData.selectedCurrency || CURRENCIES[0].code);
+        setSelectedCurrency(userData.selectedCurrency || CURRENCIES[0].code || CURRENCIES[0].value || 'USD');
         setAreGlobalAmountsHidden(userData.areGlobalAmountsHidden || false);
         setIsIncomeHidden(userData.isIncomeHidden === undefined ? true : userData.isIncomeHidden);
         setMonthlyBudgets(userData.monthlyBudgets || []);
@@ -66,7 +67,7 @@ const AppContent: React.FC = () => {
       setTotalIncome(0);
       setCategories([]);
       setTransactions([]);
-      setSelectedCurrency(CURRENCIES[0].code);
+      setSelectedCurrency(CURRENCIES[0].code || CURRENCIES[0].value || 'USD');
       setAreGlobalAmountsHidden(false);
       setIsIncomeHidden(true);
       setMonthlyBudgets([]);
@@ -300,7 +301,9 @@ const AppContent: React.FC = () => {
 const App: React.FC = () => (
   <AuthProvider>
     <ToastProvider>
-      <AppContent />
+      <ProtectedRoute>
+        <AppContent />
+      </ProtectedRoute>
     </ToastProvider>
   </AuthProvider>
 );

@@ -181,6 +181,7 @@ export interface BudgetPlanningData {
 export interface AuthContextType {
   user: User | null;
   loading: boolean;
+  isLoggingOut: boolean;
   requiresSecurityAuth: boolean;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, displayName?: string) => Promise<void>;

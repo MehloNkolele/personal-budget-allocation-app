@@ -428,6 +428,7 @@ const UserSettings: React.FC<UserSettingsProps> = ({ isOpen, onClose }) => {
         <AnimatePresence>
             {isOpen && !activeScreen && (
                 <motion.div
+                    key="settings-main"
                     className="fixed inset-0 bg-slate-900/80 backdrop-blur-lg flex items-center justify-center p-4 z-40"
                     initial="hidden" animate="visible" exit="exit" variants={modalVariants}
                 >
@@ -445,7 +446,7 @@ const UserSettings: React.FC<UserSettingsProps> = ({ isOpen, onClose }) => {
                                     <span className="font-semibold">{title}</span>
                                 </button>
                             ))}
-                            <button onClick={() => setActiveScreen('about')} className="w-full text-left flex items-center gap-4 p-4 rounded-lg transition-colors text-slate-300 hover:bg-slate-700">
+                            <button key="about-button" onClick={() => setActiveScreen('about')} className="w-full text-left flex items-center gap-4 p-4 rounded-lg transition-colors text-slate-300 hover:bg-slate-700">
                                 <InfoIcon className="w-6 h-6 text-sky-400" />
                                 <span className="font-semibold">About</span>
                             </button>
@@ -455,14 +456,15 @@ const UserSettings: React.FC<UserSettingsProps> = ({ isOpen, onClose }) => {
             )}
 
             {activeScreen && activeScreen !== 'about' && sections[activeScreen as keyof typeof sections] && (
-                <SettingsSectionModal title={sections[activeScreen as keyof typeof sections].title} onClose={() => setActiveScreen(null)}>
+                <SettingsSectionModal key={`settings-${activeScreen}`} title={sections[activeScreen as keyof typeof sections].title} onClose={() => setActiveScreen(null)}>
                     {sections[activeScreen as keyof typeof sections].component}
                 </SettingsSectionModal>
             )}
 
-            {activeScreen === 'about' && <AboutScreen onClose={() => setActiveScreen(null)} />}
+            {activeScreen === 'about' && <AboutScreen key="about-screen" onClose={() => setActiveScreen(null)} />}
 
             <DangerousActionModal
+                key="clear-data-modal"
                 isOpen={showClearDataConfirmation}
                 onClose={() => setShowClearDataConfirmation(false)}
                 onConfirm={handleClearAllData}
@@ -472,7 +474,7 @@ const UserSettings: React.FC<UserSettingsProps> = ({ isOpen, onClose }) => {
                 isActionInProgress={isClearingData}
             />
 
-            {showPinSetup && <PinInput onPinComplete={handlePinSetup} onCancel={() => setShowPinSetup(false)} mode="setup" />}
+            {showPinSetup && <PinInput key="pin-setup" onPinComplete={handlePinSetup} onCancel={() => setShowPinSetup(false)} mode="setup" />}
         </AnimatePresence>
     );
 };

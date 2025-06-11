@@ -49,6 +49,7 @@ const mapFirebaseUser = (firebaseUser: FirebaseUser): User => {
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [requiresSecurityAuth, setRequiresSecurityAuth] = useState(false);
 
   // Store the previous auth state for detecting new login
@@ -196,6 +197,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const signOut = async (): Promise<void> => {
     try {
+      setIsLoggingOut(true);
       // Save income hidden state to true for security before logging out
       if (auth.currentUser) {
         const userId = auth.currentUser.uid;
@@ -221,6 +223,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       // Data is only cleared when explicitly requested by the user
     } catch (error: any) {
       throw new Error('Failed to sign out. Please try again.');
+    } finally {
+      setIsLoggingOut(false);
     }
   };
 
@@ -328,6 +332,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const value: AuthContextType = {
     user,
     loading,
+    isLoggingOut,
     requiresSecurityAuth,
     signIn,
     signUp,

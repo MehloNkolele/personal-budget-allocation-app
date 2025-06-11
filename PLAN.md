@@ -89,3 +89,8 @@ This document outlines the development plan for the Personal Budget Allocation A
 ## [2024-07-26] - Improve Calculator UX (User Request)
 - [x] Replace "Start Over" button with "Make Changes" to allow editing inputs without a full reset.
 - [x] Keep "Start Over" as a secondary option on the results screen.
+
+## [2024-07-26] - Fix Authentication Rendering Bug (User Request)
+- [x] **State Management:** Added `isLoggingOut` state to `AuthContext` to manage UI during sign-out.
+- [x] **UI:** Created a `SplashScreen` component to display during authentication and sign-out.
+- [x] **Integration:** Updated `App.tsx` to use `loading` and `isLoggingOut` states to conditionally render the `SplashScreen`, preventing the UI from getting stuck.

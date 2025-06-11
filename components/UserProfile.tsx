@@ -18,6 +18,7 @@ const UserProfile: React.FC<UserProfileProps> = ({ isOpen, onClose }) => {
     <AnimatePresence>
       {isOpen && (
         <motion.div
+          key="user-profile"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
