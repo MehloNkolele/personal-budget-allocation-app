@@ -395,11 +395,14 @@ export class UserDataManager {
 
   // App state management for security
   static setAppInBackground(userId: string): void {
+    const backgroundTime = Date.now().toString();
     localStorage.setItem(this.getUserKey(userId, 'appInBackground'), 'true');
-    localStorage.setItem(this.getUserKey(userId, 'backgroundTime'), Date.now().toString());
+    localStorage.setItem(this.getUserKey(userId, 'backgroundTime'), backgroundTime);
+    console.log('App set to background for user:', userId, 'at time:', backgroundTime);
   }
 
   static setAppInForeground(userId: string): void {
+    console.log('App set to foreground for user:', userId);
     localStorage.removeItem(this.getUserKey(userId, 'appInBackground'));
     localStorage.removeItem(this.getUserKey(userId, 'backgroundTime'));
   }
@@ -408,18 +411,32 @@ export class UserDataManager {
     const wasInBackground = localStorage.getItem(this.getUserKey(userId, 'appInBackground'));
     const backgroundTime = localStorage.getItem(this.getUserKey(userId, 'backgroundTime'));
 
+    console.log('Checking authentication requirement:', {
+      userId,
+      wasInBackground,
+      backgroundTime,
+      currentTime: Date.now()
+    });
+
     if (!wasInBackground || !backgroundTime) {
+      console.log('No background state found, authentication not required');
       return false;
     }
 
     const securitySettings = this.getSecuritySettings(userId);
+    console.log('Security settings:', securitySettings);
+
     if (!securitySettings.isEnabled || !securitySettings.requireOnAppResume) {
+      console.log('Security not enabled or app resume auth not required');
       return false;
     }
 
-    // Require authentication if app was in background for more than 5 seconds
-    // This makes it more responsive for testing, can be adjusted as needed
+    // Require authentication if app was in background for more than 1 second
+    // This makes it more responsive for testing
     const timeDiff = Date.now() - parseInt(backgroundTime);
-    return timeDiff > 5000; // 5 seconds
+    const shouldRequire = timeDiff > 1000; // 1 second
+
+    console.log('Time difference:', timeDiff, 'ms, should require auth:', shouldRequire);
+    return shouldRequire;
   }
 }

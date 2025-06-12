@@ -98,9 +98,9 @@ const SecurityGate: React.FC<SecurityGateProps> = ({
     setError('');
 
     try {
-      // Simple hash comparison (in production, use proper hashing)
-      const hashedPin = btoa(pin); // Base64 encoding for demo
-      
+      // Use the proper hashing method from BiometricService
+      const hashedPin = await BiometricService.hashPin(pin);
+
       if (hashedPin === securitySettings.pinHash) {
         // Success authentication without toast - it will show in main app
         onAuthenticated();

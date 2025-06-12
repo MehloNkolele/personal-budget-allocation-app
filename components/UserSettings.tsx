@@ -9,6 +9,7 @@ import { UserDataManager } from '../utils/userDataManager';
 import { BiometricService } from '../services/biometricService';
 import PinInput from './auth/PinInput';
 import AboutScreen from './AboutScreen';
+import SecurityDebugPanel from './SecurityDebugPanel';
 
 interface UserSettingsProps {
   isOpen: boolean;
@@ -92,6 +93,7 @@ const UserSettings: React.FC<UserSettingsProps> = ({ isOpen, onClose }) => {
     const [biometricAvailable, setBiometricAvailable] = useState(false);
     const [biometricType, setBiometricType] = useState<string>('');
     const [isUpdatingSecurity, setIsUpdatingSecurity] = useState(false);
+    const [showDebugPanel, setShowDebugPanel] = useState(false);
   
     useEffect(() => {
       if (isOpen) {
@@ -387,9 +389,12 @@ const UserSettings: React.FC<UserSettingsProps> = ({ isOpen, onClose }) => {
                             {biometricAvailable && <option value="both">PIN or {biometricType}</option>}
                         </select>
                     </div>
-                    <div className="p-4 bg-slate-800/50 rounded-lg">
+                    <div className="p-4 bg-slate-800/50 rounded-lg space-y-3">
                         <button onClick={() => setShowPinSetup(true)} className="w-full text-center text-sky-400 font-semibold hover:text-sky-300">
                             Change PIN
+                        </button>
+                        <button onClick={() => setShowDebugPanel(true)} className="w-full text-center text-orange-400 font-semibold hover:text-orange-300 text-sm">
+                            🔧 Debug Security
                         </button>
                     </div>
                     <div className="flex items-center justify-between p-4 bg-slate-800/50 rounded-lg">
@@ -475,6 +480,11 @@ const UserSettings: React.FC<UserSettingsProps> = ({ isOpen, onClose }) => {
             />
 
             {showPinSetup && <PinInput key="pin-setup" onPinComplete={handlePinSetup} onCancel={() => setShowPinSetup(false)} mode="setup" />}
+
+            <SecurityDebugPanel
+                isOpen={showDebugPanel}
+                onClose={() => setShowDebugPanel(false)}
+            />
         </AnimatePresence>
     );
 };

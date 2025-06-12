@@ -104,18 +104,22 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
     const handleAppStateChange = async (state: any) => {
       console.log('App state changed:', state);
-      
+      console.log('Current user:', user?.uid);
+      console.log('Security enabled:', UserDataManager.isSecurityEnabled(user.uid));
+
       if (state.isActive) {
         // App came to foreground
         console.log('App came to foreground, checking if authentication is required');
-        
+
         // Check if security authentication is required
         const shouldRequireAuth = UserDataManager.shouldRequireAuthentication(user.uid);
         console.log('Should require auth:', shouldRequireAuth);
-        
+
         if (shouldRequireAuth) {
+          console.log('Setting requiresSecurityAuth to true');
           setRequiresSecurityAuth(true);
         } else {
+          console.log('Authentication not required, setting app in foreground');
           UserDataManager.setAppInForeground(user.uid);
         }
       } else {
