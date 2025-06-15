@@ -4,12 +4,13 @@ import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../hooks/useToast';
 import DangerousActionModal from './DangerousActionModal';
 import { UserIcon, PhotoIcon, LockClosedIcon, EyeIcon, EyeSlashIcon, TrashIcon, FingerPrintIcon, InfoIcon, XMarkIcon } from '../constants';
-import { PasswordChangeData, SecuritySettings } from '../types';
+import { PasswordChangeData, SecuritySettings, BudgetData } from '../types';
 import { UserDataManager } from '../utils/userDataManager';
 import { BiometricService } from '../services/biometricService';
 import PinInput from './auth/PinInput';
 import AboutScreen from './AboutScreen';
 import SecurityDebugPanel from './SecurityDebugPanel';
+import { CURRENCIES } from '../constants';
 
 interface UserSettingsProps {
   isOpen: boolean;
@@ -94,7 +95,18 @@ const UserSettings: React.FC<UserSettingsProps> = ({ isOpen, onClose }) => {
     const [biometricType, setBiometricType] = useState<string>('');
     const [isUpdatingSecurity, setIsUpdatingSecurity] = useState(false);
     const [showDebugPanel, setShowDebugPanel] = useState(false);
-  
+
+    // Budget data for AboutScreen
+    const [budgetData, setBudgetData] = useState<BudgetData>({
+        totalIncome: 0,
+        categories: [],
+        transactions: [],
+        selectedCurrency: CURRENCIES[0].code,
+        areGlobalAmountsHidden: false,
+        isIncomeHidden: true,
+        monthlyBudgets: [],
+    });
+
     useEffect(() => {
       if (isOpen) {
         document.body.style.overflow = 'hidden';
@@ -111,6 +123,10 @@ const UserSettings: React.FC<UserSettingsProps> = ({ isOpen, onClose }) => {
         const preferences = UserDataManager.loadUserPreferences(user.uid);
         setSecuritySettings(preferences.security);
         checkBiometricAvailability();
+
+        // Load budget data for AboutScreen
+        const userData = UserDataManager.loadUserData(user.uid);
+        setBudgetData(userData);
       }
     }, [user?.uid]);
 
@@ -453,7 +469,14 @@ const UserSettings: React.FC<UserSettingsProps> = ({ isOpen, onClose }) => {
                 </SettingsSectionModal>
             )}
 
-            {activeScreen === 'about' && <AboutScreen key="about-screen" onClose={() => setActiveScreen(null)} />}
+            {activeScreen === 'about' && (
+                <AboutScreen
+                    key="about-screen"
+                    onClose={() => setActiveScreen(null)}
+                    budgetData={budgetData}
+                    selectedCurrency={budgetData.selectedCurrency}
+                />
+            )}
 
             <DangerousActionModal
                 key="clear-data-modal"
