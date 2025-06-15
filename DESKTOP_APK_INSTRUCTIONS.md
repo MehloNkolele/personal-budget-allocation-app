@@ -85,7 +85,6 @@ Your APK will be properly signed with:
 ## 🎨 App Branding:
 
 - **App Icon**: Professional budget tracker icon
-- **Splash Screen**: Dark theme with app branding
 - **Status Bar**: Configured for optimal appearance
 - **App Name**: "Budget Tracker Pro"
 

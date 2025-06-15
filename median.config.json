@@ -23,10 +23,6 @@
     "statusBar": {
       "style": "DARK",
       "backgroundColor": "#0f172a"
-    },
-    "splashScreen": {
-      "backgroundColor": "#0f172a",
-      "duration": 2000
     }
   }
 }

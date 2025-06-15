@@ -92,5 +92,5 @@ This document outlines the development plan for the Personal Budget Allocation A
 
 ## [2024-07-26] - Fix Authentication Rendering Bug (User Request)
 - [x] **State Management:** Added `isLoggingOut` state to `AuthContext` to manage UI during sign-out.
-- [x] **UI:** Created a `SplashScreen` component to display during authentication and sign-out.
-- [x] **Integration:** Updated `App.tsx` to use `loading` and `isLoggingOut` states to conditionally render the `SplashScreen`, preventing the UI from getting stuck.
+- [x] **UI:** ~~Created a `SplashScreen` component to display during authentication and sign-out.~~ (Removed)
+- [x] **Integration:** ~~Updated `App.tsx` to use `loading` and `isLoggingOut` states to conditionally render the `SplashScreen`, preventing the UI from getting stuck.~~ (Simplified)

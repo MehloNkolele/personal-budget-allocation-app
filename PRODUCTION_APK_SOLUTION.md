@@ -11,7 +11,7 @@ Your Budget Tracker Pro app is **fully configured and ready** for production APK
   - App ID: `com.budgettracker.app`
   - App Name: `Budget Tracker Pro`
   - Version: `1.0.0`
-- **Resources**: App icons and splash screens properly configured
+- **Resources**: App icons properly configured
 - **Keystore**: Production keystore created (`budget-tracker-key.keystore`)
 - **Build Configuration**: Release build setup with proper signing
 

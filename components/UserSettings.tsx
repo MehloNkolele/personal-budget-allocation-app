@@ -80,7 +80,7 @@ const UserSettings: React.FC<UserSettingsProps> = ({ isOpen, onClose }) => {
     const [showClearDataConfirmation, setShowClearDataConfirmation] = useState(false);
     const [isClearingData, setIsClearingData] = useState(false);
   
-    const [showSplashScreen, setShowSplashScreen] = useState(true);
+
   
     const [securitySettings, setSecuritySettings] = useState<SecuritySettings>({
       isEnabled: false,
@@ -109,7 +109,6 @@ const UserSettings: React.FC<UserSettingsProps> = ({ isOpen, onClose }) => {
     useEffect(() => {
       if (user?.uid) {
         const preferences = UserDataManager.loadUserPreferences(user.uid);
-        setShowSplashScreen(preferences.showSplashScreen);
         setSecuritySettings(preferences.security);
         checkBiometricAvailability();
       }
@@ -198,13 +197,7 @@ const UserSettings: React.FC<UserSettingsProps> = ({ isOpen, onClose }) => {
       }
     };
   
-    const handleSplashScreenToggle = (enabled: boolean) => {
-      if (user?.uid) {
-        UserDataManager.updateSplashScreenPreference(user.uid, enabled);
-        setShowSplashScreen(enabled);
-        addToast(`Splash screen ${enabled ? 'enabled' : 'disabled'} successfully!`, 'success');
-      }
-    };
+
   
     const handleSecurityToggle = (enabled: boolean) => {
       if (!user?.uid) return;
@@ -356,14 +349,8 @@ const UserSettings: React.FC<UserSettingsProps> = ({ isOpen, onClose }) => {
 
     const PreferencesSection = () => (
         <div className="space-y-4">
-            <div className="flex items-center justify-between p-4 bg-slate-800/50 rounded-lg">
-                <div>
-                    <h4 className="font-semibold text-white">Show Welcome Screen</h4>
-                    <p className="text-sm text-slate-400">Display intro screen on app start.</p>
-                </div>
-                <button onClick={() => handleSplashScreenToggle(!showSplashScreen)} className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${showSplashScreen ? 'bg-sky-600' : 'bg-slate-700'}`}>
-                    <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${showSplashScreen ? 'translate-x-6' : 'translate-x-1'}`} />
-                </button>
+            <div className="p-4 bg-slate-800/50 rounded-lg text-center">
+                <p className="text-slate-400">No preferences available at the moment.</p>
             </div>
         </div>
     );

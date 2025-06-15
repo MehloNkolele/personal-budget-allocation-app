@@ -3,7 +3,6 @@ import { CURRENCIES } from '../constants';
 
 // User preferences interface
 export interface UserPreferences {
-  showSplashScreen: boolean;
   security: SecuritySettings;
   // Add more preferences here in the future
 }
@@ -336,26 +335,30 @@ export class UserDataManager {
         requireOnSensitiveActions: false
       };
 
+      console.log('📋 Loading user preferences for:', userId, 'saved:', savedPreferences);
+
       if (savedPreferences) {
         const parsedPreferences = JSON.parse(savedPreferences);
         // Ensure all required properties exist with defaults
-        return {
-          showSplashScreen: parsedPreferences.showSplashScreen ?? true,
+        const preferences = {
           security: {
             ...defaultSecurity,
             ...parsedPreferences.security
           },
           ...parsedPreferences
         };
+        console.log('📋 Loaded preferences:', preferences);
+        return preferences;
       }
-      return {
-        showSplashScreen: true,
+
+      const defaultPreferences = {
         security: defaultSecurity
       };
+      console.log('📋 Using default preferences:', defaultPreferences);
+      return defaultPreferences;
     } catch (error) {
       console.error("Error loading user preferences:", error);
-      return {
-        showSplashScreen: true,
+      const errorPreferences = {
         security: {
           isEnabled: false,
           authMethod: 'pin',
@@ -363,6 +366,8 @@ export class UserDataManager {
           requireOnSensitiveActions: false
         }
       };
+      console.log('📋 Using error fallback preferences:', errorPreferences);
+      return errorPreferences;
     }
   }
 
@@ -370,11 +375,7 @@ export class UserDataManager {
     localStorage.setItem(this.getUserKey(userId, 'preferences'), JSON.stringify(preferences));
   }
 
-  static updateSplashScreenPreference(userId: string, showSplashScreen: boolean): void {
-    const preferences = this.loadUserPreferences(userId);
-    preferences.showSplashScreen = showSplashScreen;
-    this.saveUserPreferences(userId, preferences);
-  }
+
 
   // Security preferences management
   static updateSecuritySettings(userId: string, securitySettings: SecuritySettings): void {

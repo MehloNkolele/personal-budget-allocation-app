@@ -216,12 +216,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       
       await firebaseSignOut(auth);
 
-      // Set a flag to indicate this was an intentional logout (not a page refresh)
-      // This will trigger splash screen to show after logout
-      localStorage.setItem('justLoggedOut', 'true');
 
-      // Remove the global flag that prevents splash screen for non-authenticated users
-      localStorage.removeItem('hasSeenSplash');
 
       // Note: We don't clear user data here to preserve it for when they sign back in
       // Data is only cleared when explicitly requested by the user
