@@ -26,6 +26,11 @@ dist-ssr
 # Gradle temp files
 gradle-temp/
 gradle-8.5-all.zip
+gradle-8.9-all.zip
+
+# Large installer files
+*.msi
+jdk-21.msi
 
 # Android keystore (keep secure)
 android/budget-tracker-key.keystore
