@@ -17,6 +17,8 @@ interface CategoryManagerProps {
   onToggleSubcategoryComplete: (parentCategoryId: string, subcategoryId: string) => void;
   formatCurrency: (amount: number, isIndividualItemHidden?: boolean) => string;
   areGlobalAmountsHidden: boolean;
+  totalIncome: number;
+  unallocatedAmount: number;
 }
 
 const CategoryManager: React.FC<CategoryManagerProps> = ({
@@ -31,6 +33,8 @@ const CategoryManager: React.FC<CategoryManagerProps> = ({
   onToggleSubcategoryComplete,
   formatCurrency,
   areGlobalAmountsHidden,
+  totalIncome,
+  unallocatedAmount,
 }) => {
   // Track which category is expanded
   const [expandedCategoryId, setExpandedCategoryId] = useState<string | null>(null);
@@ -136,7 +140,7 @@ const CategoryManager: React.FC<CategoryManagerProps> = ({
 
           {/* Statistics Cards */}
           {categories.length > 0 && (
-            <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 lg:gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 lg:gap-4">
               <motion.div
                 className="bg-gradient-to-br from-emerald-500/10 to-teal-600/10 backdrop-blur-sm border border-emerald-500/20 rounded-xl p-3 lg:p-4"
                 whileHover={{ scale: 1.02 }}
@@ -164,7 +168,7 @@ const CategoryManager: React.FC<CategoryManagerProps> = ({
               </motion.div>
 
               <motion.div
-                className="bg-gradient-to-br from-purple-500/10 to-pink-600/10 backdrop-blur-sm border border-purple-500/20 rounded-xl p-3 lg:p-4 col-span-2 lg:col-span-1"
+                className="bg-gradient-to-br from-purple-500/10 to-pink-600/10 backdrop-blur-sm border border-purple-500/20 rounded-xl p-3 lg:p-4"
                 whileHover={{ scale: 1.02 }}
                 transition={{ type: "spring", stiffness: 300 }}
               >
@@ -173,6 +177,21 @@ const CategoryManager: React.FC<CategoryManagerProps> = ({
                     {totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0}%
                   </p>
                   <p className="text-slate-400 text-xs lg:text-sm">Completed</p>
+                </div>
+              </motion.div>
+
+              <motion.div
+                className="bg-gradient-to-br from-amber-500/10 to-orange-600/10 backdrop-blur-sm border border-amber-500/20 rounded-xl p-3 lg:p-4 col-span-2 md:col-span-1"
+                whileHover={{ scale: 1.02 }}
+                transition={{ type: "spring", stiffness: 300 }}
+              >
+                <div className="text-center">
+                  <p className={`font-bold text-lg lg:text-xl ${
+                    unallocatedAmount >= 0 ? 'text-amber-400' : 'text-red-400'
+                  }`}>
+                    {formatCurrency(unallocatedAmount)}
+                  </p>
+                  <p className="text-slate-400 text-xs lg:text-sm">Remaining</p>
                 </div>
               </motion.div>
             </div>

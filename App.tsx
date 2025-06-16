@@ -196,19 +196,21 @@ const AppContent: React.FC = () => {
 
   const renderCurrentSection = () => {
     switch (currentSection) {
-      case 'categories': 
-        return <CategoryManager 
-          categories={categories} 
-          onAddCategory={() => openModal({ type: 'addCategory' })} 
-          onEditCategory={(cat) => openModal({ type: 'editCategory', category: cat })} 
-          onDeleteCategory={deleteCategory} 
-          onAddSubcategory={(parentId) => openModal({ type: 'addSubcategory', parentCategoryId: parentId })} 
-          onEditSubcategory={(parentCategoryId, sub) => openModal({ type: 'editSubcategory', parentCategoryId, subcategory: sub })} 
-          onDeleteSubcategory={deleteSubcategory} 
-          onToggleSubcategoryComplete={toggleSubcategoryComplete} 
-          onToggleCategoryAmountHidden={toggleCategoryAmountHidden} 
-          formatCurrency={formatCurrency} 
-          areGlobalAmountsHidden={areGlobalAmountsHidden} 
+      case 'categories':
+        return <CategoryManager
+          categories={categories}
+          onAddCategory={() => openModal({ type: 'addCategory' })}
+          onEditCategory={(cat) => openModal({ type: 'editCategory', category: cat })}
+          onDeleteCategory={deleteCategory}
+          onAddSubcategory={(parentId) => openModal({ type: 'addSubcategory', parentCategoryId: parentId })}
+          onEditSubcategory={(parentCategoryId, sub) => openModal({ type: 'editSubcategory', parentCategoryId, subcategory: sub })}
+          onDeleteSubcategory={deleteSubcategory}
+          onToggleSubcategoryComplete={toggleSubcategoryComplete}
+          onToggleCategoryAmountHidden={toggleCategoryAmountHidden}
+          formatCurrency={formatCurrency}
+          areGlobalAmountsHidden={areGlobalAmountsHidden}
+          totalIncome={totalIncome}
+          unallocatedAmount={unallocatedAmount}
         />;
       case 'reports': return <Reports categories={categories} transactions={transactions} totalIncome={totalIncome} formatCurrency={formatCurrency} selectedCurrency={selectedCurrency} />;
       case 'planning': return <BudgetPlanning 
