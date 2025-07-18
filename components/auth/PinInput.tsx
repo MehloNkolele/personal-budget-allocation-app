@@ -94,8 +94,8 @@ const PinInput: React.FC<PinInputProps> = ({
   };
 
   return (
-    <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
+    <div className="fixed inset-0 bg-slate-900/90 backdrop-blur-lg flex items-center justify-center p-4 z-[60]" style={{ minHeight: '100vh', minWidth: '100vw' }}>
+      <div className="w-full max-w-md bg-slate-800 border border-slate-700 rounded-2xl shadow-2xl p-6 flex-shrink-0">
         {/* Header */}
         <div className="text-center mb-8">
           <div className="w-16 h-16 bg-gradient-to-br from-sky-500 to-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4">

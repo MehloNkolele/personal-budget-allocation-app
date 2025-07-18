@@ -56,14 +56,21 @@ const AboutScreen: React.FC<AboutScreenProps> = ({ onClose, budgetData, selected
       animate="visible"
       exit="exit"
       variants={aboutVariants}
-      className="fixed inset-0 bg-slate-900/80 backdrop-blur-lg flex items-center justify-center p-4 z-50"
+      className="fixed inset-0 bg-slate-900/90 backdrop-blur-lg z-50"
+      style={{
+        display: 'grid',
+        placeItems: 'center',
+        minHeight: '100vh',
+        minWidth: '100vw',
+        padding: '1rem'
+      }}
     >
-      <div className="w-full max-w-4xl h-full sm:h-auto sm:max-h-[90vh] bg-slate-800/50 rounded-2xl border border-slate-700 shadow-2xl shadow-sky-900/20 flex flex-col overflow-hidden">
-        <header className="p-6 flex items-center justify-between border-b border-slate-700 flex-shrink-0">
+      <div className="w-full max-w-4xl max-h-[90vh] bg-slate-800 rounded-2xl border border-slate-700 shadow-2xl flex flex-col overflow-hidden" style={{ marginRight: '2rem' }}>
+        <header className="p-4 sm:p-6 flex items-center justify-between border-b border-slate-700 flex-shrink-0">
           <motion.div variants={itemVariants} className="flex items-center gap-4">
             <InfoIcon className="w-8 h-8 text-sky-400" />
             <div>
-              <h1 className="text-2xl font-bold text-white">About Personal Budget Planner</h1>
+              <h1 className="text-xl sm:text-2xl font-bold text-white">About Personal Budget Planner</h1>
               <p className="text-slate-400 text-sm">Version 1.0.0</p>
             </div>
           </motion.div>
@@ -77,7 +84,7 @@ const AboutScreen: React.FC<AboutScreenProps> = ({ onClose, budgetData, selected
           </motion.button>
         </header>
 
-        <div className="p-8 space-y-8 overflow-y-auto flex-grow">
+        <div className="p-4 sm:p-6 lg:p-8 space-y-6 sm:space-y-8 overflow-y-auto flex-grow">
             {/* App Statistics Section */}
             <motion.div variants={itemVariants} className="space-y-6">
                 <h2 className="text-xl font-semibold text-white border-b border-slate-700 pb-2 flex items-center gap-2">

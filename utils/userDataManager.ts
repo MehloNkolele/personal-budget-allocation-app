@@ -19,7 +19,7 @@ export class UserDataManager {
         totalIncome: 0,
         categories: [],
         transactions: [],
-        selectedCurrency: CURRENCIES[0].code,
+        selectedCurrency: 'ZAR',
         areGlobalAmountsHidden: false,
         isIncomeHidden: true, // Default to hidden for security
         monthlyBudgets: [],
@@ -120,7 +120,7 @@ export class UserDataManager {
         totalIncome: 0,
         categories: [],
         transactions: [],
-        selectedCurrency: CURRENCIES[0].code,
+        selectedCurrency: 'ZAR',
         areGlobalAmountsHidden: false,
         isIncomeHidden: true, // Default to hidden for security
         monthlyBudgets: [],

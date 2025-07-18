@@ -311,28 +311,7 @@ const CategoryCard: React.FC<CategoryCardProps> = ({
           </div>
         )}
 
-        {/* Subcategories Summary (when collapsed) */}
-        {hasSubcategories && !isExpanded && (
-          <motion.div
-            className="mb-4 p-3 bg-slate-700/20 rounded-lg border border-slate-600/20"
-            whileHover={{ backgroundColor: "rgba(51, 65, 85, 0.3)" }}
-          >
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-medium text-slate-300">
-                  {category.subcategories.length} subcategories
-                </span>
-                {completionRate > 0 && (
-                  <div className="flex items-center gap-1">
-                    <div className="w-2 h-2 bg-emerald-400 rounded-full"></div>
-                    <span className="text-xs text-emerald-400">{completionRate.toFixed(0)}% complete</span>
-                  </div>
-                )}
-              </div>
-              <ChevronDownIcon className="w-4 h-4 text-slate-400" />
-            </div>
-          </motion.div>
-        )}
+
 
         {/* Expanded Subcategories */}
         <AnimatePresence>

@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../hooks/useToast';
@@ -7,11 +7,11 @@ import { UserIcon, PhotoIcon, LockClosedIcon, EyeIcon, EyeSlashIcon, TrashIcon, 
 import { PasswordChangeData, SecuritySettings, BudgetData } from '../types';
 import { FirebaseDataManager } from '../services/firebaseDataManager';
 import { UserDataManager } from '../utils/userDataManager';
-import { BiometricService } from '../services/biometricService';
+
 import { ImageUtils } from '../utils/imageUtils';
 import PinInput from './auth/PinInput';
 import AboutScreen from './AboutScreen';
-import SecurityDebugPanel from './SecurityDebugPanel';
+
 import { CURRENCIES } from '../constants';
 
 interface UserSettingsProps {
@@ -33,7 +33,7 @@ const itemVariants = {
 const SettingsSectionModal: React.FC<{ title: string; onClose: () => void; children: React.ReactNode }> = ({ title, onClose, children }) => {
     return (
         <motion.div
-            className="fixed inset-0 bg-slate-900/80 backdrop-blur-lg flex items-center justify-center p-4 z-50 min-h-screen"
+            className="fixed inset-0 bg-slate-900/80 backdrop-blur-lg flex items-center justify-center p-4 z-40 min-h-screen"
             initial="hidden"
             animate="visible"
             exit="exit"
@@ -92,10 +92,11 @@ const UserSettings: React.FC<UserSettingsProps> = ({ isOpen, onClose }) => {
       requireOnSensitiveActions: false
     });
     const [showPinSetup, setShowPinSetup] = useState(false);
-    const [biometricAvailable, setBiometricAvailable] = useState(false);
-    const [biometricType, setBiometricType] = useState<string>('');
+
+
+
     const [isUpdatingSecurity, setIsUpdatingSecurity] = useState(false);
-    const [showDebugPanel, setShowDebugPanel] = useState(false);
+
 
     // Budget data for AboutScreen
     const [budgetData, setBudgetData] = useState<BudgetData>({
@@ -131,12 +132,35 @@ const UserSettings: React.FC<UserSettingsProps> = ({ isOpen, onClose }) => {
             const profile = await FirebaseDataManager.getUserProfile(user.uid);
             if (profile?.preferences?.security) {
               setSecuritySettings(profile.preferences.security);
-            }
-            if (profile?.profilePictureBase64) {
-              setProfilePictureBase64(profile.profilePictureBase64);
+            } else {
+              // Ensure we have default security settings
+              const defaultSecurity: SecuritySettings = {
+                isEnabled: false,
+                authMethod: 'pin',
+                requireOnAppResume: true,
+                requireOnSensitiveActions: false
+              };
+              setSecuritySettings(defaultSecurity);
             }
 
-            checkBiometricAvailability();
+            // Load profile picture from database first, then fallback to localStorage
+            if (profile?.profilePictureBase64) {
+              setProfilePictureBase64(profile.profilePictureBase64);
+            } else {
+              // Fallback to localStorage for migration
+              const localProfilePicture = localStorage.getItem(`profilePicture_${user.uid}`);
+              if (localProfilePicture) {
+                setProfilePictureBase64(localProfilePicture);
+                // Migrate to database
+                try {
+                  await FirebaseDataManager.updateProfilePicture(user.uid, localProfilePicture);
+                } catch (migrationError) {
+                  console.warn('Failed to migrate profile picture to database:', migrationError);
+                }
+              }
+            }
+
+
 
             // Load budget data for AboutScreen
             const userData = await FirebaseDataManager.getBudgetData(user.uid);
@@ -160,15 +184,15 @@ const UserSettings: React.FC<UserSettingsProps> = ({ isOpen, onClose }) => {
             setActiveScreen(null);
         }
     }, [isOpen]);
-  
-    const checkBiometricAvailability = async () => {
-      const { canUse } = await BiometricService.canUseBiometric();
-      setBiometricAvailable(canUse);
-      if (canUse) {
-        const type = await BiometricService.getBiometryType();
-        setBiometricType(BiometricService.getBiometricTypeName(type));
-      }
-    };
+
+    // Sync displayName state with user data
+    useEffect(() => {
+        if (user?.displayName !== undefined) {
+            setDisplayName(user.displayName || '');
+        }
+    }, [user?.displayName]);
+
+
   
     const handleUpdateProfile = async (e: React.FormEvent) => {
       e.preventDefault();
@@ -225,6 +249,7 @@ const UserSettings: React.FC<UserSettingsProps> = ({ isOpen, onClose }) => {
   
     const handleSecurityToggle = async (enabled: boolean) => {
       if (!user?.uid) return;
+
       if (enabled && !securitySettings.pinHash) {
         setShowPinSetup(true);
         return;
@@ -232,9 +257,11 @@ const UserSettings: React.FC<UserSettingsProps> = ({ isOpen, onClose }) => {
 
       try {
         const updatedSettings = { ...securitySettings, isEnabled: enabled };
+
         await FirebaseDataManager.updateUserProfile(user.uid, {
           preferences: { security: updatedSettings }
         });
+
         setSecuritySettings(updatedSettings);
         addToast(`Security ${enabled ? 'enabled' : 'disabled'} successfully!`, 'success');
       } catch (error) {
@@ -242,36 +269,32 @@ const UserSettings: React.FC<UserSettingsProps> = ({ isOpen, onClose }) => {
         addToast('Failed to update security settings', 'error');
       }
     };
-  
-    const handleAuthMethodChange = async (method: 'pin' | 'biometric' | 'both') => {
-      if (!user?.uid) return;
-      if ((method === 'biometric' || method === 'both') && !biometricAvailable) {
-        addToast('Biometric authentication is not available on this device', 'error');
-        return;
-      }
 
-      try {
-        const updatedSettings = { ...securitySettings, authMethod: method };
-        await FirebaseDataManager.updateUserProfile(user.uid, {
-          preferences: { security: updatedSettings }
-        });
-        setSecuritySettings(updatedSettings);
-        addToast('Authentication method updated successfully!', 'success');
-      } catch (error) {
-        console.error('Error updating auth method:', error);
-        addToast('Failed to update authentication method', 'error');
-      }
-    };
     
     const handlePinSetup = async (pin: string) => {
       if (!user?.uid) return;
+
       setIsUpdatingSecurity(true);
       try {
-        const pinHash = await BiometricService.hashPin(pin);
-        const updatedSettings = { ...securitySettings, isEnabled: true, pinHash };
+        // Simple PIN hashing using crypto API
+        const encoder = new TextEncoder();
+        const data = encoder.encode(pin + user.uid); // Add user ID as salt
+        const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+        const hashArray = Array.from(new Uint8Array(hashBuffer));
+        const pinHash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+
+        const updatedSettings = {
+          ...securitySettings,
+          isEnabled: true,
+          pinHash,
+          authMethod: 'pin' as const,
+          requireOnAppResume: true
+        };
+
         await FirebaseDataManager.updateUserProfile(user.uid, {
           preferences: { security: updatedSettings }
         });
+
         setSecuritySettings(updatedSettings);
         setShowPinSetup(false);
         addToast('PIN and security enabled successfully!', 'success');
@@ -282,22 +305,7 @@ const UserSettings: React.FC<UserSettingsProps> = ({ isOpen, onClose }) => {
         setIsUpdatingSecurity(false);
       }
     };
-  
-    const handleRequireOnResumeToggle = async (enabled: boolean) => {
-      if (!user?.uid) return;
 
-      try {
-        const updatedSettings = { ...securitySettings, requireOnAppResume: enabled };
-        await FirebaseDataManager.updateUserProfile(user.uid, {
-          preferences: { security: updatedSettings }
-        });
-        setSecuritySettings(updatedSettings);
-        addToast(`'Require on resume' ${enabled ? 'enabled' : 'disabled'}.`, 'success');
-      } catch (error) {
-        console.error('Error updating resume requirement:', error);
-        addToast('Failed to update setting', 'error');
-      }
-    };
 
     const handleProfilePictureUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
       if (!user?.uid || !event.target.files || event.target.files.length === 0) return;
@@ -320,6 +328,9 @@ const UserSettings: React.FC<UserSettingsProps> = ({ isOpen, onClose }) => {
         // Update in Firebase
         await FirebaseDataManager.updateProfilePicture(user.uid, base64);
 
+        // Also store in localStorage for backward compatibility
+        localStorage.setItem(`profilePicture_${user.uid}`, base64);
+
         // Update local state
         setProfilePictureBase64(base64);
         addToast('Profile picture updated successfully!', 'success');
@@ -337,8 +348,17 @@ const UserSettings: React.FC<UserSettingsProps> = ({ isOpen, onClose }) => {
       if (!user?.uid) return;
 
       try {
-        await FirebaseDataManager.updateProfilePicture(user.uid, '');
+        // Update profile in database to remove picture
+        await FirebaseDataManager.updateUserProfile(user.uid, {
+          profilePictureBase64: null
+        });
+
+        // Update local state
         setProfilePictureBase64(null);
+
+        // Also remove from localStorage for backward compatibility
+        localStorage.removeItem(`profilePicture_${user.uid}`);
+
         addToast('Profile picture removed successfully!', 'success');
       } catch (error) {
         console.error('Error removing profile picture:', error);
@@ -346,7 +366,7 @@ const UserSettings: React.FC<UserSettingsProps> = ({ isOpen, onClose }) => {
       }
     };
     
-    const ProfileSection = () => (
+    const ProfileSection = useCallback(() => (
         <form onSubmit={handleUpdateProfile} className="space-y-6">
             <div className="bg-slate-800/50 rounded-xl p-4 border border-slate-700 text-center">
                 <label className="block text-lg font-semibold text-slate-200 mb-3">Profile Picture</label>
@@ -413,9 +433,9 @@ const UserSettings: React.FC<UserSettingsProps> = ({ isOpen, onClose }) => {
                 {isUpdatingProfile ? 'Updating...' : 'Update Profile'}
             </button>
         </form>
-    );
+    ), [displayName, user?.email, profilePictureBase64, isUploadingPicture, isUpdatingProfile, handleUpdateProfile, handleRemoveProfilePicture, handleProfilePictureUpload]);
     
-    const PasswordSection = () => (
+    const PasswordSection = useCallback(() => (
         <form onSubmit={handleUpdatePassword} className="space-y-4">
             <div className="relative">
                 <label htmlFor="currentPassword" className="block text-sm font-medium text-slate-300 mb-1">Current Password</label>
@@ -442,60 +462,46 @@ const UserSettings: React.FC<UserSettingsProps> = ({ isOpen, onClose }) => {
                 {isUpdatingPassword ? 'Updating...' : 'Update Password'}
             </button>
         </form>
-    );
+    ), [passwordData, showCurrentPassword, showNewPassword, showConfirmPassword, isUpdatingPassword, handleUpdatePassword, handlePasswordInputChange]);
 
-    const PreferencesSection = () => (
-        <div className="space-y-4">
-            <div className="p-4 bg-slate-800/50 rounded-lg text-center">
-                <p className="text-slate-400">No preferences available at the moment.</p>
-            </div>
-        </div>
-    );
 
-    const SecuritySection = () => (
+
+    const SecuritySection = useCallback(() => (
         <div className="space-y-4">
             <div className="flex items-center justify-between p-4 bg-slate-800/50 rounded-lg">
                 <div>
                     <h4 className="font-semibold text-white">Enable Security Features</h4>
-                    <p className="text-sm text-slate-400">Lock the app with a PIN or biometrics.</p>
+                    <p className="text-sm text-slate-400">Lock the app with a PIN when you return to it.</p>
                 </div>
-                <button onClick={() => handleSecurityToggle(!securitySettings.isEnabled)} className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${securitySettings.isEnabled ? 'bg-sky-600' : 'bg-slate-700'}`}>
-                    <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${securitySettings.isEnabled ? 'translate-x-6' : 'translate-x-1'}`} />
+                <button
+                    type="button"
+                    onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        handleSecurityToggle(!securitySettings.isEnabled);
+                    }}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2 focus:ring-offset-slate-800 cursor-pointer ${securitySettings.isEnabled ? 'bg-sky-600' : 'bg-slate-700'}`}
+                    style={{ pointerEvents: 'auto' }}
+                >
+                    <span
+                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${securitySettings.isEnabled ? 'translate-x-6' : 'translate-x-1'}`}
+                        style={{ pointerEvents: 'none' }}
+                    />
                 </button>
             </div>
             {securitySettings.isEnabled && (
                 <>
-                    <div className="p-4 bg-slate-800/50 rounded-lg space-y-3">
-                        <label className="font-semibold text-white">Authentication Method</label>
-                        <select onChange={(e) => handleAuthMethodChange(e.target.value as any)} value={securitySettings.authMethod} className="w-full p-2 bg-slate-700/50 border border-slate-600 rounded-md">
-                            <option value="pin">PIN</option>
-                            {biometricAvailable && <option value="biometric">{biometricType}</option>}
-                            {biometricAvailable && <option value="both">PIN or {biometricType}</option>}
-                        </select>
-                    </div>
-                    <div className="p-4 bg-slate-800/50 rounded-lg space-y-3">
+                    <div className="p-4 bg-slate-800/50 rounded-lg">
                         <button onClick={() => setShowPinSetup(true)} className="w-full text-center text-sky-400 font-semibold hover:text-sky-300">
                             Change PIN
-                        </button>
-                        <button onClick={() => setShowDebugPanel(true)} className="w-full text-center text-orange-400 font-semibold hover:text-orange-300 text-sm">
-                            🔧 Debug Security
-                        </button>
-                    </div>
-                    <div className="flex items-center justify-between p-4 bg-slate-800/50 rounded-lg">
-                        <div>
-                            <h4 className="font-semibold text-white">Require Auth on App Resume</h4>
-                            <p className="text-sm text-slate-400">Ask for authentication when you return to the app.</p>
-                        </div>
-                        <button onClick={() => handleRequireOnResumeToggle(!securitySettings.requireOnAppResume)} className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${securitySettings.requireOnAppResume ? 'bg-sky-600' : 'bg-slate-700'}`}>
-                            <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${securitySettings.requireOnAppResume ? 'translate-x-6' : 'translate-x-1'}`} />
                         </button>
                     </div>
                 </>
             )}
         </div>
-    );
+    ), [securitySettings, handleSecurityToggle, setShowPinSetup]);
 
-    const DataSection = () => (
+    const DataSection = useCallback(() => (
         <div className="text-center p-4 bg-slate-800/50 rounded-lg border border-red-500/30">
             <h4 className="text-xl font-bold text-red-400 mb-2">Danger Zone</h4>
             <p className="text-slate-400 mb-4">Permanently delete all your budget and transaction data. This action cannot be undone.</p>
@@ -503,15 +509,31 @@ const UserSettings: React.FC<UserSettingsProps> = ({ isOpen, onClose }) => {
                 Clear All Data
             </button>
         </div>
-    );
+    ), [setShowClearDataConfirmation, setActiveScreen]);
 
-    const sections = {
-        profile: { title: 'Profile Settings', icon: UserIcon, component: <ProfileSection /> },
-        password: { title: 'Change Password', icon: LockClosedIcon, component: <PasswordSection /> },
-        preferences: { title: 'App Preferences', icon: PhotoIcon, component: <PreferencesSection /> },
-        security: { title: 'Security Settings', icon: FingerPrintIcon, component: <SecuritySection /> },
-        data: { title: 'Data Management', icon: TrashIcon, component: <DataSection /> },
-    };
+    const sections = useMemo(() => ({
+        profile: { title: 'Profile Settings', icon: UserIcon, component: ProfileSection() },
+        password: { title: 'Change Password', icon: LockClosedIcon, component: PasswordSection() },
+        security: { title: 'Security Settings', icon: FingerPrintIcon, component: SecuritySection() },
+        data: { title: 'Data Management', icon: TrashIcon, component: DataSection() },
+    }), [
+        displayName,
+        user?.email,
+        profilePictureBase64,
+        isUploadingPicture,
+        isUpdatingProfile,
+        passwordData,
+        showCurrentPassword,
+        showNewPassword,
+        showConfirmPassword,
+        isUpdatingPassword,
+        securitySettings,
+        isClearingData,
+        ProfileSection,
+        PasswordSection,
+        SecuritySection,
+        DataSection
+    ]);
 
     return (
         <AnimatePresence>
@@ -544,13 +566,13 @@ const UserSettings: React.FC<UserSettingsProps> = ({ isOpen, onClose }) => {
                 </motion.div>
             )}
 
-            {activeScreen && activeScreen !== 'about' && sections[activeScreen as keyof typeof sections] && (
+            {activeScreen && activeScreen !== 'about' && sections[activeScreen as keyof typeof sections] && !showPinSetup && (
                 <SettingsSectionModal key={`settings-${activeScreen}`} title={sections[activeScreen as keyof typeof sections].title} onClose={() => setActiveScreen(null)}>
                     {sections[activeScreen as keyof typeof sections].component}
                 </SettingsSectionModal>
             )}
 
-            {activeScreen === 'about' && (
+            {activeScreen === 'about' && !showPinSetup && (
                 <AboutScreen
                     key="about-screen"
                     onClose={() => setActiveScreen(null)}
@@ -570,12 +592,18 @@ const UserSettings: React.FC<UserSettingsProps> = ({ isOpen, onClose }) => {
                 isActionInProgress={isClearingData}
             />
 
-            {showPinSetup && <PinInput key="pin-setup" onPinComplete={handlePinSetup} onCancel={() => setShowPinSetup(false)} mode="setup" />}
+            {showPinSetup && (
+                <PinInput
+                    key="pin-setup"
+                    onPinComplete={handlePinSetup}
+                    onCancel={() => setShowPinSetup(false)}
+                    mode="setup"
+                    title="Set Up PIN"
+                    subtitle="Choose a 4-digit PIN to secure your budget data"
+                />
+            )}
 
-            <SecurityDebugPanel
-                isOpen={showDebugPanel}
-                onClose={() => setShowDebugPanel(false)}
-            />
+
         </AnimatePresence>
     );
 };

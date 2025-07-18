@@ -33,7 +33,7 @@ const AppContent: React.FC = () => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [modalState, setModalState] = useState<ModalType>(null);
-  const [selectedCurrency, setSelectedCurrency] = useState<string>(CURRENCIES[0].code);
+  const [selectedCurrency, setSelectedCurrency] = useState<string>('ZAR');
   const [areGlobalAmountsHidden, setAreGlobalAmountsHidden] = useState<boolean>(false);
   const [isIncomeHidden, setIsIncomeHidden] = useState<boolean>(true);
   const [monthlyBudgets, setMonthlyBudgets] = useState<MonthlyBudget[]>([]);

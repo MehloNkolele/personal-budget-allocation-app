@@ -152,10 +152,37 @@ export class FirebaseDataManager {
   static async updateUserProfile(userId: string, updates: Partial<FirestoreUserProfile>): Promise<void> {
     try {
       const profileRef = this.getUserDocRef(userId, 'profile');
-      await updateDoc(profileRef, {
-        ...updates,
-        updatedAt: serverTimestamp()
-      });
+
+      // Check if profile exists first
+      const profileSnap = await getDoc(profileRef);
+
+      if (profileSnap.exists()) {
+        // Update existing profile
+        await updateDoc(profileRef, {
+          ...updates,
+          updatedAt: serverTimestamp()
+        });
+      } else {
+        // Create new profile with the updates
+        await setDoc(profileRef, {
+          displayName: '',
+          photoURL: null,
+          profilePictureBase64: null,
+          email: '',
+          emailVerified: false,
+          preferences: {
+            security: {
+              isEnabled: false,
+              authMethod: 'pin',
+              requireOnAppResume: true,
+              requireOnSensitiveActions: false
+            }
+          },
+          ...updates,
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp()
+        });
+      }
     } catch (error) {
       console.error('Error updating user profile:', error);
       throw new Error('Failed to update user profile');
@@ -165,10 +192,36 @@ export class FirebaseDataManager {
   static async updateProfilePicture(userId: string, profilePictureBase64: string): Promise<void> {
     try {
       const profileRef = this.getUserDocRef(userId, 'profile');
-      await updateDoc(profileRef, {
-        profilePictureBase64,
-        updatedAt: serverTimestamp()
-      });
+
+      // Check if profile exists first
+      const profileSnap = await getDoc(profileRef);
+
+      if (profileSnap.exists()) {
+        // Update existing profile
+        await updateDoc(profileRef, {
+          profilePictureBase64,
+          updatedAt: serverTimestamp()
+        });
+      } else {
+        // Create new profile with the picture
+        await setDoc(profileRef, {
+          profilePictureBase64,
+          displayName: '',
+          photoURL: null,
+          email: '',
+          emailVerified: false,
+          preferences: {
+            security: {
+              isEnabled: false,
+              authMethod: 'pin',
+              requireOnAppResume: true,
+              requireOnSensitiveActions: false
+            }
+          },
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp()
+        });
+      }
     } catch (error) {
       console.error('Error updating profile picture:', error);
       throw new Error('Failed to update profile picture');
@@ -181,7 +234,7 @@ export class FirebaseDataManager {
       const budgetRef = this.getUserDocRef(userId, 'budgetData');
       const data: FirestoreBudgetData = {
         totalIncome: budgetData.totalIncome || 0,
-        selectedCurrency: budgetData.selectedCurrency || CURRENCIES[0].code,
+        selectedCurrency: budgetData.selectedCurrency || 'ZAR',
         areGlobalAmountsHidden: budgetData.areGlobalAmountsHidden || false,
         isIncomeHidden: budgetData.isIncomeHidden || true,
         createdAt: serverTimestamp() as Timestamp,
@@ -218,7 +271,7 @@ export class FirebaseDataManager {
         totalIncome: 0,
         categories: [],
         transactions: [],
-        selectedCurrency: CURRENCIES[0].code,
+        selectedCurrency: 'ZAR',
         areGlobalAmountsHidden: false,
         isIncomeHidden: true,
         monthlyBudgets: []
