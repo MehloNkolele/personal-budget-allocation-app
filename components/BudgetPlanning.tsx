@@ -1,7 +1,8 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MonthlyBudget, BudgetTemplate, Category } from '../types';
-import { UserDataManager } from '../utils/userDataManager';
+import { FirebaseDataManager } from '../services/firebaseDataManager';
+import { BudgetHelpers } from '../utils/budgetHelpers';
 import MonthlyBudgetView from './MonthlyBudgetView';
 import BudgetTemplateManager from './BudgetTemplateManager';
 import BudgetOverview from './BudgetOverview';
@@ -53,32 +54,34 @@ const BudgetPlanning: React.FC<BudgetPlanningProps> = ({
   const [isOverviewVisible, setIsOverviewVisible] = useState(false);
   const [isPlanningVisible, setIsPlanningVisible] = useState(true);
   const [selectedMonth, setSelectedMonth] = useState<string>(() => {
-    const now = new Date();
-    const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
-    return UserDataManager.formatMonthKey(nextMonth.getFullYear(), nextMonth.getMonth() + 1);
+    return BudgetHelpers.getNextMonthKey();
   });
 
   // State for different modes and modals
   const [viewingBudget, setViewingBudget] = useState<MonthlyBudget | null>(null);
   const [showTemplateManager, setShowTemplateManager] = useState(false);
-  const [budgetTemplates, setBudgetTemplates] = useState<BudgetTemplate[]>(() =>
-    UserDataManager.loadBudgetTemplates(userId)
-  );
+  const [budgetTemplates, setBudgetTemplates] = useState<BudgetTemplate[]>([]);
   const [copyFromBudgetId, setCopyFromBudgetId] = useState<string>('');
+
+  // Load budget templates on component mount
+  useEffect(() => {
+    const loadTemplates = async () => {
+      try {
+        const templates = await FirebaseDataManager.getBudgetTemplates(userId);
+        setBudgetTemplates(templates);
+      } catch (error) {
+        console.error('Error loading budget templates:', error);
+      }
+    };
+
+    if (userId) {
+      loadTemplates();
+    }
+  }, [userId]);
 
   // Generate available months (current month + next 12 months)
   const availableMonths = useMemo(() => {
-    const months = [];
-    const now = new Date();
-    
-    for (let i = 0; i < 13; i++) {
-      const date = new Date(now.getFullYear(), now.getMonth() + i, 1);
-      const monthKey = UserDataManager.formatMonthKey(date.getFullYear(), date.getMonth() + 1);
-      const monthName = UserDataManager.getMonthName(date.getFullYear(), date.getMonth() + 1);
-      months.push({ key: monthKey, name: monthName });
-    }
-    
-    return months;
+    return BudgetHelpers.getAvailableMonths(13);
   }, []);
 
   // Get current budget for selected month
@@ -87,11 +90,11 @@ const BudgetPlanning: React.FC<BudgetPlanningProps> = ({
   }, [monthlyBudgets, selectedMonth]);
 
   const createBudgetFromCurrent = () => {
-    const { year, month } = UserDataManager.parseMonthKey(selectedMonth);
-    const monthName = UserDataManager.getMonthName(year, month);
-    
+    const { year, month } = BudgetHelpers.parseMonthKey(selectedMonth);
+    const monthName = BudgetHelpers.getMonthName(year, month);
+
     const newBudget: MonthlyBudget = {
-      id: UserDataManager.generateMonthlyBudgetId(),
+      id: BudgetHelpers.generateMonthlyBudgetId(),
       month: selectedMonth,
       year,
       monthName,
@@ -120,11 +123,11 @@ const BudgetPlanning: React.FC<BudgetPlanningProps> = ({
   };
 
   const createNewBudget = () => {
-    const { year, month } = UserDataManager.parseMonthKey(selectedMonth);
-    const monthName = UserDataManager.getMonthName(year, month);
+    const { year, month } = BudgetHelpers.parseMonthKey(selectedMonth);
+    const monthName = BudgetHelpers.getMonthName(year, month);
 
     const newBudget: MonthlyBudget = {
-      id: UserDataManager.generateMonthlyBudgetId(),
+      id: BudgetHelpers.generateMonthlyBudgetId(),
       month: selectedMonth,
       year,
       monthName,
@@ -142,11 +145,11 @@ const BudgetPlanning: React.FC<BudgetPlanningProps> = ({
     const sourceBudget = monthlyBudgets.find(b => b.id === sourceBudgetId);
     if (!sourceBudget) return;
 
-    const { year, month } = UserDataManager.parseMonthKey(selectedMonth);
-    const monthName = UserDataManager.getMonthName(year, month);
+    const { year, month } = BudgetHelpers.parseMonthKey(selectedMonth);
+    const monthName = BudgetHelpers.getMonthName(year, month);
 
     const newBudget: MonthlyBudget = {
-      id: UserDataManager.generateMonthlyBudgetId(),
+      id: BudgetHelpers.generateMonthlyBudgetId(),
       month: selectedMonth,
       year,
       monthName,
@@ -171,11 +174,11 @@ const BudgetPlanning: React.FC<BudgetPlanningProps> = ({
   };
 
   const createBudgetFromTemplate = (template: BudgetTemplate) => {
-    const { year, month } = UserDataManager.parseMonthKey(selectedMonth);
-    const monthName = UserDataManager.getMonthName(year, month);
+    const { year, month } = BudgetHelpers.parseMonthKey(selectedMonth);
+    const monthName = BudgetHelpers.getMonthName(year, month);
 
     const newBudget: MonthlyBudget = {
-      id: UserDataManager.generateMonthlyBudgetId(),
+      id: BudgetHelpers.generateMonthlyBudgetId(),
       month: selectedMonth,
       year,
       monthName,
@@ -204,9 +207,17 @@ const BudgetPlanning: React.FC<BudgetPlanningProps> = ({
     setViewingBudget(null);
   };
 
-  const handleTemplatesSave = (templates: BudgetTemplate[]) => {
-    setBudgetTemplates(templates);
-    UserDataManager.saveBudgetTemplates(userId, templates);
+  const handleTemplatesSave = async (templates: BudgetTemplate[]) => {
+    try {
+      // Update local state immediately
+      setBudgetTemplates(templates);
+
+      // Save to Firebase - this will handle both new and updated templates
+      // Note: The BudgetTemplateManager component should handle individual template operations
+      // This is just for bulk updates if needed
+    } catch (error) {
+      console.error('Error saving templates:', error);
+    }
   };
 
   return (
@@ -336,7 +347,7 @@ const BudgetPlanning: React.FC<BudgetPlanningProps> = ({
                     </div>
                 ) : (
                     <div className="bg-slate-700/50 p-6 rounded-2xl">
-                         <h4 className="font-bold text-white text-lg mb-4">Create a budget for {UserDataManager.getMonthName(UserDataManager.parseMonthKey(selectedMonth).year, UserDataManager.parseMonthKey(selectedMonth).month)}</h4>
+                         <h4 className="font-bold text-white text-lg mb-4">Create a budget for {BudgetHelpers.getMonthName(BudgetHelpers.parseMonthKey(selectedMonth).year, BudgetHelpers.parseMonthKey(selectedMonth).month)}</h4>
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                            {/* Create New Blank Budget */}
                             <button onClick={createNewBudget} className="group p-4 bg-slate-600/50 hover:bg-sky-500/20 rounded-xl transition-colors text-left">

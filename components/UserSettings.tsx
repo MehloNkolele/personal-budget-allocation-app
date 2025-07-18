@@ -5,8 +5,10 @@ import { useToast } from '../hooks/useToast';
 import DangerousActionModal from './DangerousActionModal';
 import { UserIcon, PhotoIcon, LockClosedIcon, EyeIcon, EyeSlashIcon, TrashIcon, FingerPrintIcon, InfoIcon, XMarkIcon } from '../constants';
 import { PasswordChangeData, SecuritySettings, BudgetData } from '../types';
+import { FirebaseDataManager } from '../services/firebaseDataManager';
 import { UserDataManager } from '../utils/userDataManager';
 import { BiometricService } from '../services/biometricService';
+import { ImageUtils } from '../utils/imageUtils';
 import PinInput from './auth/PinInput';
 import AboutScreen from './AboutScreen';
 import SecurityDebugPanel from './SecurityDebugPanel';
@@ -65,7 +67,6 @@ const UserSettings: React.FC<UserSettingsProps> = ({ isOpen, onClose }) => {
     const [activeScreen, setActiveScreen] = useState<string | null>(null);
   
     const [displayName, setDisplayName] = useState(user?.displayName || '');
-    const [profilePicture, setProfilePicture] = useState<string | null>(user?.photoURL || null);
     const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
   
     const [passwordData, setPasswordData] = useState<PasswordChangeData>({
@@ -107,6 +108,10 @@ const UserSettings: React.FC<UserSettingsProps> = ({ isOpen, onClose }) => {
         monthlyBudgets: [],
     });
 
+    // Profile picture state
+    const [profilePictureBase64, setProfilePictureBase64] = useState<string | null>(null);
+    const [isUploadingPicture, setIsUploadingPicture] = useState(false);
+
     useEffect(() => {
       if (isOpen) {
         document.body.style.overflow = 'hidden';
@@ -119,15 +124,35 @@ const UserSettings: React.FC<UserSettingsProps> = ({ isOpen, onClose }) => {
     }, [isOpen]);
 
     useEffect(() => {
-      if (user?.uid) {
-        const preferences = UserDataManager.loadUserPreferences(user.uid);
-        setSecuritySettings(preferences.security);
-        checkBiometricAvailability();
+      const loadUserData = async () => {
+        if (user?.uid) {
+          try {
+            // Load user profile with preferences
+            const profile = await FirebaseDataManager.getUserProfile(user.uid);
+            if (profile?.preferences?.security) {
+              setSecuritySettings(profile.preferences.security);
+            }
+            if (profile?.profilePictureBase64) {
+              setProfilePictureBase64(profile.profilePictureBase64);
+            }
 
-        // Load budget data for AboutScreen
-        const userData = UserDataManager.loadUserData(user.uid);
-        setBudgetData(userData);
-      }
+            checkBiometricAvailability();
+
+            // Load budget data for AboutScreen
+            const userData = await FirebaseDataManager.getBudgetData(user.uid);
+            setBudgetData(userData);
+          } catch (error) {
+            console.error('Error loading user data:', error);
+            // Fallback to localStorage for migration period
+            const preferences = UserDataManager.loadUserPreferences(user.uid);
+            setSecuritySettings(preferences.security);
+            const userData = UserDataManager.loadUserData(user.uid);
+            setBudgetData(userData);
+          }
+        }
+      };
+
+      loadUserData();
     }, [user?.uid]);
 
     useEffect(() => {
@@ -145,29 +170,12 @@ const UserSettings: React.FC<UserSettingsProps> = ({ isOpen, onClose }) => {
       }
     };
   
-    const handleProfilePictureChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-      const file = event.target.files?.[0];
-      if (file) {
-        if (file.size > 2 * 1024 * 1024) { addToast('Profile picture must be smaller than 2MB', 'error'); return; }
-        if (!file.type.startsWith('image/')) { addToast('Please select a valid image file', 'error'); return; }
-        const reader = new FileReader();
-        reader.onload = (e) => setProfilePicture(e.target?.result as string);
-        reader.readAsDataURL(file);
-      }
-    };
-  
-    const handleRemoveProfilePicture = () => {
-      setProfilePicture(null);
-      if (fileInputRef.current) fileInputRef.current.value = '';
-      if (user?.uid) localStorage.removeItem(`profilePicture_${user.uid}`);
-    };
-  
     const handleUpdateProfile = async (e: React.FormEvent) => {
       e.preventDefault();
       if (!displayName.trim()) { addToast('Display name cannot be empty', 'error'); return; }
       setIsUpdatingProfile(true);
       try {
-        await updateUserProfile(displayName.trim(), profilePicture || undefined);
+        await updateUserProfile(displayName.trim());
         addToast('Profile updated successfully!', 'success');
       } catch (error: any) {
         addToast(error.message || 'Failed to update profile', 'error');
@@ -215,28 +223,44 @@ const UserSettings: React.FC<UserSettingsProps> = ({ isOpen, onClose }) => {
   
 
   
-    const handleSecurityToggle = (enabled: boolean) => {
+    const handleSecurityToggle = async (enabled: boolean) => {
       if (!user?.uid) return;
       if (enabled && !securitySettings.pinHash) {
         setShowPinSetup(true);
         return;
       }
-      const updatedSettings = { ...securitySettings, isEnabled: enabled };
-      UserDataManager.updateSecuritySettings(user.uid, updatedSettings);
-      setSecuritySettings(updatedSettings);
-      addToast(`Security ${enabled ? 'enabled' : 'disabled'} successfully!`, 'success');
+
+      try {
+        const updatedSettings = { ...securitySettings, isEnabled: enabled };
+        await FirebaseDataManager.updateUserProfile(user.uid, {
+          preferences: { security: updatedSettings }
+        });
+        setSecuritySettings(updatedSettings);
+        addToast(`Security ${enabled ? 'enabled' : 'disabled'} successfully!`, 'success');
+      } catch (error) {
+        console.error('Error updating security settings:', error);
+        addToast('Failed to update security settings', 'error');
+      }
     };
   
-    const handleAuthMethodChange = (method: 'pin' | 'biometric' | 'both') => {
+    const handleAuthMethodChange = async (method: 'pin' | 'biometric' | 'both') => {
       if (!user?.uid) return;
       if ((method === 'biometric' || method === 'both') && !biometricAvailable) {
         addToast('Biometric authentication is not available on this device', 'error');
         return;
       }
-      const updatedSettings = { ...securitySettings, authMethod: method };
-      UserDataManager.updateSecuritySettings(user.uid, updatedSettings);
-      setSecuritySettings(updatedSettings);
-      addToast('Authentication method updated successfully!', 'success');
+
+      try {
+        const updatedSettings = { ...securitySettings, authMethod: method };
+        await FirebaseDataManager.updateUserProfile(user.uid, {
+          preferences: { security: updatedSettings }
+        });
+        setSecuritySettings(updatedSettings);
+        addToast('Authentication method updated successfully!', 'success');
+      } catch (error) {
+        console.error('Error updating auth method:', error);
+        addToast('Failed to update authentication method', 'error');
+      }
     };
     
     const handlePinSetup = async (pin: string) => {
@@ -245,23 +269,80 @@ const UserSettings: React.FC<UserSettingsProps> = ({ isOpen, onClose }) => {
       try {
         const pinHash = await BiometricService.hashPin(pin);
         const updatedSettings = { ...securitySettings, isEnabled: true, pinHash };
-        UserDataManager.updateSecuritySettings(user.uid, updatedSettings);
+        await FirebaseDataManager.updateUserProfile(user.uid, {
+          preferences: { security: updatedSettings }
+        });
         setSecuritySettings(updatedSettings);
         setShowPinSetup(false);
         addToast('PIN and security enabled successfully!', 'success');
       } catch (error) {
+        console.error('Error setting up PIN:', error);
         addToast('Failed to set up PIN', 'error');
       } finally {
         setIsUpdatingSecurity(false);
       }
     };
   
-    const handleRequireOnResumeToggle = (enabled: boolean) => {
-      if(user?.uid) {
+    const handleRequireOnResumeToggle = async (enabled: boolean) => {
+      if (!user?.uid) return;
+
+      try {
         const updatedSettings = { ...securitySettings, requireOnAppResume: enabled };
-        UserDataManager.updateSecuritySettings(user.uid, updatedSettings);
+        await FirebaseDataManager.updateUserProfile(user.uid, {
+          preferences: { security: updatedSettings }
+        });
         setSecuritySettings(updatedSettings);
         addToast(`'Require on resume' ${enabled ? 'enabled' : 'disabled'}.`, 'success');
+      } catch (error) {
+        console.error('Error updating resume requirement:', error);
+        addToast('Failed to update setting', 'error');
+      }
+    };
+
+    const handleProfilePictureUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+      if (!user?.uid || !event.target.files || event.target.files.length === 0) return;
+
+      const file = event.target.files[0];
+
+      // Validate file
+      const validation = ImageUtils.validateImageFile(file);
+      if (!validation.isValid) {
+        addToast(validation.error || 'Invalid image file', 'error');
+        return;
+      }
+
+      setIsUploadingPicture(true);
+
+      try {
+        // Resize and convert to base64
+        const base64 = await ImageUtils.resizeImageToBase64(file, 200, 200, 0.8);
+
+        // Update in Firebase
+        await FirebaseDataManager.updateProfilePicture(user.uid, base64);
+
+        // Update local state
+        setProfilePictureBase64(base64);
+        addToast('Profile picture updated successfully!', 'success');
+      } catch (error) {
+        console.error('Error uploading profile picture:', error);
+        addToast('Failed to upload profile picture', 'error');
+      } finally {
+        setIsUploadingPicture(false);
+        // Clear the input
+        event.target.value = '';
+      }
+    };
+
+    const handleRemoveProfilePicture = async () => {
+      if (!user?.uid) return;
+
+      try {
+        await FirebaseDataManager.updateProfilePicture(user.uid, '');
+        setProfilePictureBase64(null);
+        addToast('Profile picture removed successfully!', 'success');
+      } catch (error) {
+        console.error('Error removing profile picture:', error);
+        addToast('Failed to remove profile picture', 'error');
       }
     };
     
@@ -271,12 +352,12 @@ const UserSettings: React.FC<UserSettingsProps> = ({ isOpen, onClose }) => {
                 <label className="block text-lg font-semibold text-slate-200 mb-3">Profile Picture</label>
                 <div className="flex flex-col items-center space-y-4">
                     <div className="relative group">
-                        {profilePicture ? (
+                        {profilePictureBase64 ? (
                             <div className="relative">
-                                <img 
-                                    src={profilePicture} 
-                                    alt="Profile" 
-                                    className="w-32 h-32 rounded-3xl object-cover border-4 border-violet-500/30 shadow-2xl group-hover:shadow-violet-500/40 transition-all duration-500 group-hover:scale-105" 
+                                <img
+                                    src={profilePictureBase64}
+                                    alt="Profile"
+                                    className="w-32 h-32 rounded-3xl object-cover border-4 border-violet-500/30 shadow-2xl group-hover:shadow-violet-500/40 transition-all duration-500 group-hover:scale-105"
                                 />
                                 <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-violet-400/20 via-sky-500/20 to-purple-600/20 opacity-0 group-hover:opacity-100 transition-all duration-500"></div>
                                 {/* Decorative elements */}
@@ -306,16 +387,16 @@ const UserSettings: React.FC<UserSettingsProps> = ({ isOpen, onClose }) => {
                         )}
                     </div>
                     <div className="flex gap-4">
-                        <button type="button" onClick={() => fileInputRef.current?.click()} className="bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white px-6 py-3 rounded-xl text-sm font-semibold transition-all duration-300 shadow-lg hover:shadow-violet-500/30 hover:scale-105">
-                            Change Photo
+                        <button type="button" onClick={() => fileInputRef.current?.click()} disabled={isUploadingPicture} className="bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 disabled:from-gray-600 disabled:to-gray-700 text-white px-6 py-3 rounded-xl text-sm font-semibold transition-all duration-300 shadow-lg hover:shadow-violet-500/30 hover:scale-105 disabled:cursor-not-allowed disabled:scale-100">
+                            {isUploadingPicture ? 'Uploading...' : 'Change Photo'}
                         </button>
-                        {profilePicture && (
-                            <button type="button" onClick={handleRemoveProfilePicture} className="bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700 text-white px-6 py-3 rounded-xl text-sm font-semibold transition-all duration-300 shadow-lg hover:shadow-red-500/30 hover:scale-105">
+                        {profilePictureBase64 && (
+                            <button type="button" onClick={handleRemoveProfilePicture} disabled={isUploadingPicture} className="bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700 disabled:from-gray-600 disabled:to-gray-700 text-white px-6 py-3 rounded-xl text-sm font-semibold transition-all duration-300 shadow-lg hover:shadow-red-500/30 hover:scale-105 disabled:cursor-not-allowed disabled:scale-100">
                                 Remove
                             </button>
                         )}
                     </div>
-                    <input ref={fileInputRef} type="file" accept="image/*" onChange={handleProfilePictureChange} className="hidden" />
+                    <input ref={fileInputRef} type="file" accept="image/*" onChange={handleProfilePictureUpload} className="hidden" />
                 </div>
             </div>
             <div className="space-y-4">

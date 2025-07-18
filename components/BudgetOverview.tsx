@@ -41,9 +41,9 @@ const BudgetOverview: React.FC<BudgetOverviewProps> = ({
     if (formatted.length > 12) {
       const absAmount = Math.abs(amount);
       if (absAmount >= 1000000) {
-        return `${selectedCurrency === 'USD' ? '$' : 'ZAR'} ${(amount / 1000000).toFixed(1)}M`;
+        return `${selectedCurrency} ${(amount / 1000000).toFixed(1)}M`;
       } else if (absAmount >= 1000) {
-        return `${selectedCurrency === 'USD' ? '$' : 'ZAR'} ${(amount / 1000).toFixed(1)}K`;
+        return `${selectedCurrency} ${(amount / 1000).toFixed(1)}K`;
       }
     }
     return formatted;
@@ -129,16 +129,11 @@ const BudgetOverview: React.FC<BudgetOverviewProps> = ({
               onChange={(e) => onCurrencyChange(e.target.value)}
               className="w-full bg-slate-700 border border-slate-600 text-slate-100 rounded-xl px-4 py-3 text-lg font-semibold focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-all duration-200"
             >
-              {CURRENCIES.map((c, index) => {
-                // Handle both currency object structures
-                const currencyCode = c.code || c.value;
-                const currencyName = c.name || c.label;
-                return (
-                  <option key={currencyCode || `currency-${index}`} value={currencyCode}>
-                    {currencyName} ({currencyCode})
-                  </option>
-                );
-              })}
+              {CURRENCIES.map((c, index) => (
+                <option key={c.code || `currency-${index}`} value={c.code}>
+                  {c.name} ({c.code})
+                </option>
+              ))}
             </select>
           </div>
         </div>

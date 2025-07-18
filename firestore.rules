@@ -1,0 +1,114 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    function isValidUser(userId) {
+      return userId is string && userId.size() > 0;
+    }
+    
+
+    
+    // User profile and data rules
+    match /users/{userId} {
+      // Allow read/write only for the authenticated user
+      allow read, write: if isOwner(userId);
+      
+      // User profile document (uses fixed document ID 'data')
+      match /profile/data {
+        allow read, write: if isOwner(userId);
+      }
+      
+      // Budget data document (uses fixed document ID 'data')
+      match /budgetData/data {
+        allow read, write: if isOwner(userId);
+      }
+      
+      // Categories collection
+      match /categories/{categoryId} {
+        allow read, write: if isOwner(userId);
+        
+        // Validate category data structure
+        allow create, update: if isOwner(userId)
+          && request.resource.data.keys().hasAll(['id', 'name', 'allocatedAmount', 'spentAmount', 'subcategories', 'createdAt', 'updatedAt'])
+          && request.resource.data.id is string
+          && request.resource.data.name is string
+          && request.resource.data.name.size() > 0
+          && request.resource.data.allocatedAmount is number
+          && request.resource.data.allocatedAmount >= 0
+          && request.resource.data.spentAmount is number
+          && request.resource.data.spentAmount >= 0
+          && request.resource.data.subcategories is list
+          && request.resource.data.createdAt is timestamp
+          && request.resource.data.updatedAt is timestamp;
+      }
+      
+      // Transactions collection
+      match /transactions/{transactionId} {
+        allow read, write: if isOwner(userId);
+        
+        // Validate transaction data structure
+        allow create, update: if isOwner(userId)
+          && request.resource.data.keys().hasAll(['id', 'amount', 'description', 'categoryId', 'date', 'type', 'createdAt', 'updatedAt'])
+          && request.resource.data.id is string
+          && request.resource.data.amount is number
+          && request.resource.data.amount > 0
+          && request.resource.data.description is string
+          && request.resource.data.categoryId is string
+          && request.resource.data.date is timestamp
+          && request.resource.data.type in ['expense', 'income']
+          && request.resource.data.createdAt is timestamp
+          && request.resource.data.updatedAt is timestamp;
+      }
+      
+      // Monthly budgets collection
+      match /monthlyBudgets/{budgetId} {
+        allow read, write: if isOwner(userId);
+        
+        // Validate monthly budget data structure
+        allow create, update: if isOwner(userId)
+          && request.resource.data.keys().hasAll(['id', 'month', 'year', 'monthName', 'totalIncome', 'categories', 'transactions', 'createdAt', 'updatedAt'])
+          && request.resource.data.id is string
+          && request.resource.data.month is string
+          && request.resource.data.year is int
+          && request.resource.data.year >= 2020 && request.resource.data.year <= 2100
+          && request.resource.data.monthName is string
+          && request.resource.data.totalIncome is number
+          && request.resource.data.totalIncome >= 0
+          && request.resource.data.categories is list
+          && request.resource.data.transactions is list
+          && request.resource.data.createdAt is timestamp
+          && request.resource.data.updatedAt is timestamp;
+      }
+      
+      // Budget templates collection
+      match /budgetTemplates/{templateId} {
+        allow read, write: if isOwner(userId);
+        
+        // Validate budget template data structure
+        allow create, update: if isOwner(userId)
+          && request.resource.data.keys().hasAll(['id', 'name', 'totalIncome', 'categories', 'createdAt', 'updatedAt'])
+          && request.resource.data.id is string
+          && request.resource.data.name is string
+          && request.resource.data.name.size() > 0
+          && request.resource.data.totalIncome is number
+          && request.resource.data.totalIncome >= 0
+          && request.resource.data.categories is list
+          && request.resource.data.createdAt is timestamp
+          && request.resource.data.updatedAt is timestamp;
+      }
+    }
+    
+    // Deny all other access
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

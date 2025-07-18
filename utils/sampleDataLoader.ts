@@ -1,5 +1,5 @@
 import { Category, MonthlyBudget, Transaction } from '../types';
-import { UserDataManager } from './userDataManager';
+import { FirebaseDataManager } from '../services/firebaseDataManager';
 
 export class SampleDataLoader {
   static createSampleCategories(): Category[] {
@@ -156,39 +156,77 @@ export class SampleDataLoader {
     ];
   }
 
-  static loadSampleData(userId: string, overwriteExisting: boolean = false) {
-    const existingData = UserDataManager.loadUserData(userId);
-    
-    // Only load sample data if user has no existing data or explicitly wants to overwrite
-    if (!overwriteExisting && (existingData.categories.length > 0 || existingData.totalIncome > 0)) {
-      return false; // Data already exists
+  static async loadSampleData(userId: string, overwriteExisting: boolean = false) {
+    try {
+      const existingData = await FirebaseDataManager.getBudgetData(userId);
+      const existingCategories = await FirebaseDataManager.getCategories(userId);
+
+      // Only load sample data if user has no existing data or explicitly wants to overwrite
+      if (!overwriteExisting && (existingCategories.length > 0 || existingData.totalIncome > 0)) {
+        return false; // Data already exists
+      }
+
+      // Create budget data
+      await FirebaseDataManager.createBudgetData(userId, {
+        totalIncome: 30000, // Sample income in ZAR
+        selectedCurrency: 'ZAR',
+        areGlobalAmountsHidden: false,
+        isIncomeHidden: true,
+        categories: [],
+        transactions: [],
+        monthlyBudgets: []
+      });
+
+      // Add sample categories
+      const sampleCategories = this.createSampleCategories();
+      for (const category of sampleCategories) {
+        await FirebaseDataManager.addCategory(userId, {
+          name: category.name,
+          allocatedAmount: category.allocatedAmount,
+          spentAmount: category.spentAmount || 0,
+          subcategories: category.subcategories,
+          isAmountHidden: category.isAmountHidden || false
+        });
+      }
+
+      // Add sample transactions
+      const sampleTransactions = this.createSampleTransactions();
+      for (const transaction of sampleTransactions) {
+        await FirebaseDataManager.addTransaction(userId, {
+          amount: transaction.amount,
+          description: transaction.description,
+          categoryId: transaction.categoryId,
+          subcategoryId: transaction.subcategoryId,
+          date: transaction.date,
+          type: transaction.type,
+          tags: transaction.tags || []
+        });
+      }
+
+      return true; // Sample data loaded
+    } catch (error) {
+      console.error('Error loading sample data:', error);
+      return false;
     }
-
-    const sampleData = {
-      totalIncome: 30000, // Sample income in ZAR
-      categories: this.createSampleCategories(),
-      transactions: this.createSampleTransactions(),
-      selectedCurrency: 'ZAR',
-      areGlobalAmountsHidden: false,
-      isIncomeHidden: true,
-      monthlyBudgets: [] as MonthlyBudget[]
-    };
-
-    UserDataManager.saveUserData(userId, sampleData);
-    return true; // Sample data loaded
   }
 
-  static clearAllData(userId: string) {
-    const emptyData = {
-      totalIncome: 0,
-      categories: [],
-      transactions: [],
-      selectedCurrency: 'ZAR',
-      areGlobalAmountsHidden: false,
-      isIncomeHidden: true,
-      monthlyBudgets: []
-    };
+  static async clearAllData(userId: string) {
+    try {
+      await FirebaseDataManager.clearUserData(userId);
 
-    UserDataManager.saveUserData(userId, emptyData);
+      // Recreate empty budget data
+      await FirebaseDataManager.createBudgetData(userId, {
+        totalIncome: 0,
+        selectedCurrency: 'ZAR',
+        areGlobalAmountsHidden: false,
+        isIncomeHidden: true,
+        categories: [],
+        transactions: [],
+        monthlyBudgets: []
+      });
+    } catch (error) {
+      console.error('Error clearing all data:', error);
+      throw error;
+    }
   }
 }

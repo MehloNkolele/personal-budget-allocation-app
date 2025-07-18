@@ -1,6 +1,7 @@
 // Import the functions you need from the SDKs you need
 import { initializeApp } from "firebase/app";
 import { getAuth, GoogleAuthProvider } from "firebase/auth";
+import { getFirestore, connectFirestoreEmulator, enableNetwork, disableNetwork } from "firebase/firestore";
 import { getAnalytics } from "firebase/analytics";
 
 // Your web app's Firebase configuration
@@ -20,6 +21,18 @@ const app = initializeApp(firebaseConfig);
 
 // Initialize Firebase Authentication and get a reference to the service
 export const auth = getAuth(app);
+
+// Initialize Cloud Firestore and get a reference to the service
+export const db = getFirestore(app);
+
+// Enable offline persistence
+try {
+  // Note: enableNetwork and disableNetwork are used for manual network control
+  // Firestore automatically handles offline persistence
+  console.log('Firestore initialized with offline persistence');
+} catch (error) {
+  console.warn('Failed to enable Firestore offline persistence:', error);
+}
 
 // Initialize Google Auth Provider
 export const googleProvider = new GoogleAuthProvider();

@@ -13,6 +13,7 @@ import {
 } from '../constants';
 import UserDropdown from './UserDropdown';
 import Logo from './Logo';
+import NetworkStatusIndicator from './NetworkStatusIndicator';
 
 import { AppSection } from '../services/navigationService';
 
@@ -99,8 +100,11 @@ const Navbar: React.FC<NavbarProps> = ({
             </div>
           </div>
 
-          {/* Right Side - Add Button and User */}
+          {/* Right Side - Network Status, Add Button and User */}
           <div className="flex items-center space-x-3">
+            {/* Network Status Indicator */}
+            <NetworkStatusIndicator className="hidden md:block" />
+
             {/* Add Category Button */}
             <button
               onClick={onNewCategory}

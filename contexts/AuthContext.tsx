@@ -14,6 +14,7 @@ import {
 } from 'firebase/auth';
 import { auth, googleProvider } from '../firebase.config';
 import { User, AuthContextType } from '../types';
+import { FirebaseDataManager } from '../services/firebaseDataManager';
 import { UserDataManager } from '../utils/userDataManager';
 import { Capacitor } from '@capacitor/core';
 import { App } from '@capacitor/app';
@@ -234,7 +235,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
 
       const userId = auth.currentUser.uid;
-      UserDataManager.clearUserData(userId);
+      await FirebaseDataManager.clearUserData(userId);
     } catch (error: any) {
       throw new Error('Failed to clear user data. Please try again.');
     }
