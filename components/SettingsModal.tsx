@@ -20,10 +20,10 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, title, c
 
   return (
     <div
-      className="fixed inset-0 bg-black/90 backdrop-blur-lg flex items-start sm:items-center justify-center z-50 p-2 sm:p-4 min-h-screen"
+      className="fixed inset-0 bg-black/90 backdrop-blur-lg flex items-center justify-center z-50 p-2 sm:p-4 min-h-screen"
       onClick={handleBackdropClick}
     >
-      <div className="bg-gradient-to-br from-slate-800 via-slate-800 to-slate-900 border border-slate-700/50 p-0 rounded-xl sm:rounded-2xl shadow-2xl w-full max-w-4xl relative max-h-[95vh] sm:max-h-[90vh] overflow-hidden transform transition-all duration-300 scale-100 animate-in fade-in-0 zoom-in-95 mx-auto my-2 sm:my-0">
+      <div className="bg-gradient-to-br from-slate-800 via-slate-800 to-slate-900 border border-slate-700/50 p-0 rounded-xl sm:rounded-2xl shadow-2xl w-full max-w-4xl relative max-h-[90vh] overflow-hidden transform transition-all duration-300 scale-100 animate-in fade-in-0 zoom-in-95 mx-auto">
         {/* Header */}
         <div className="bg-gradient-to-r from-sky-600/20 to-blue-600/20 border-b border-slate-700/50 px-3 sm:px-6 lg:px-8 py-3 sm:py-6">
           <div className="flex justify-between items-center">
@@ -50,7 +50,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, title, c
         </div>
 
         {/* Content */}
-        <div className="overflow-y-auto max-h-[calc(95vh-100px)] sm:max-h-[calc(90vh-120px)] p-3 sm:p-6 lg:p-8">
+        <div className="overflow-y-auto max-h-[calc(90vh-120px)] p-3 sm:p-6 lg:p-8">
           {children}
         </div>
       </div>
