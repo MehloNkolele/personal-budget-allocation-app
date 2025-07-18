@@ -41,8 +41,8 @@ const developerInfo = {
     },
     links: [
         { name: "Portfolio", url: "https://react-personal-portfolio-alpha.vercel.app/", Icon: HomeIcon },
-        { name: "GitHub", url: "https://github.com/BennetNkolele", Icon: PencilIcon },
-        { name: "LinkedIn", url: "https://www.linkedin.com/in/bennetnkolele", Icon: UserCircleIcon }
+        { name: "GitHub", url: "https://github.com/Benighter", Icon: PencilIcon },
+        { name: "LinkedIn", url: "https://www.linkedin.com/in/bennet-nkolele-321285249/", Icon: UserCircleIcon }
     ]
 };
 
